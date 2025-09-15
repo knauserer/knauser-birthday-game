@@ -1,0 +1,12 @@
+{
+    "image1": {
+        "data": "hwQQABAAAAAAAMDMAAAAAADA3M0PAAAAAN/tzf0AAADw/e/N/fD/D+/d3c397979793d3P3+v/3v/d/d/f7//O/e3d3u7t797+7u7u7+v/3w7u7u7+7++wD/vfvv7v77APDdzfDu7v0AAM8MAO/+/wAAAPD//w8AAAAA7+7+AAAAAAD//w8AAA==",
+        "mimeType": "image/x-mkcd-f4",
+        "displayName": "monkey"
+    },
+    "*": {
+        "mimeType": "image/x-mkcd-f4",
+        "dataEncoding": "base64",
+        "namespace": "myImages"
+    }
+}
