@@ -4,6 +4,27 @@
         "mimeType": "image/x-mkcd-f4",
         "displayName": "monkey"
     },
+    "anim1": {
+        "namespace": "myAnimations",
+        "id": "anim1",
+        "mimeType": "application/mkcd-animation",
+        "data": "YzgwMDEwMDAxMDAwMDIwMDAwMDAwMGYwZmZmZjAwMDAwMDAwMDBlZmVlZWUwZjAwMDAwMGZmZWVkZWRkZmQwMDAwZjBkZGVlZGRkZGRkMGMwMGMwYmRlZWZkZGRkZjBjZmZjMGJkZWVmZGRkZGZjZGVmMGZmY2VlZGRkZGVlY2RlZjBmZjBlZWRlZGNkZGNkZWYwZmYwZWZlZWNkY2MwZmVmMGZlZmVlZmVmZmZmMDBmMGZmZWVlZWVlZmUwMDAwMDBlZmVlZmVlZWVmZmYwMDAwZWZlZWZmZWZmZWVmMGZmMGZiZmZmZmNmZGRkYmZkZjBkZGZjMDBkZmRkZGNmZDAwZmYwZjAwZmZmZmZmMGYwMDAwMDBmMGZmZmYwMDAwMDAwMDAwZWZlZWVlMGYwMDAwMDBmMGVlZGVkZGZkMDAwMDAwZmZlZWZkZGRkZjBjMDBmMGRkZWVmZGRkZGYwYzAwYzBiZGVlZGRkZGVlY2RmZmMwYmRlZWRkZGNkZGNkZWYwZmZjZWVkZGNkY2NjY2VmMGZmMGVmZGVkZGRkMGZlZjBmZWZlZWZlZmZmZjAwZWZmZmVlZWVlZWZlMDAwMGYwZWZlZWZlZmVlZjBmMDAwMGVmZWVmZWZlZWYwZjAwMDBmMGZlYmZmZGRiMGYwMDAwZjBiZGRiY2RkZDBmMDAwMGYwZmZmZmZmZmYwMDAw",
+        "displayName": "walking left"
+    },
+    "anim2": {
+        "namespace": "myAnimations",
+        "id": "anim2",
+        "mimeType": "application/mkcd-animation",
+        "data": "YzgwMDEwMDAxMDAwMDEwMDAwMDBmZmZmMGYwMDAwMDAwMGYwZWVlZWZlMDAwMDAwMDBkZmRkZWRlZTBmMDAwMGMwZmRkZGRmZWVmZjAwMDBjMGZkZGRkZmVlZGQwZjAwZGNlZWRkZGRlZWRiMGMwMGRjZGRjZGRkZWVkYjBjMDBjY2NjZGNlZGVlY2YwMDAwZjBkZGRkZWVmZTBmMDAwMDAwZmZmZmVmZWVmZTAwMDAwMDAwZmZlZWVlZWUwZmZmMDBmMGVlZWZmZWVlMGZmZTAwZWZmZWVlZWZlZTBmZmVmMGRiZGZmYmJiZWZmZmZlZjBkZGRmZmRkZGViZmZmZjAwZmZmZmZmZmZmZmZmMGY=",
+        "displayName": "facing left"
+    },
+    "anim3": {
+        "namespace": "myAnimations",
+        "id": "anim3",
+        "mimeType": "application/mkcd-animation",
+        "data": "YzgwMDEwMDAxMDAwMDEwMDAwMDAwMGYwZmZmZjAwMDAwMDAwMDBlZmVlZWUwZjAwMDAwMGYwZWVkZWRkZmQwMDAwMDBmZmVlZmRkZGRmMGMwMGYwZGRlZWZkZGRkZjBjMDBjMGJkZWVkZGRkZWVjZDAwYzBiZGVlZGRkY2RkY2QwMDAwZmNlZWRlY2RjY2NjMDAwMGYwZWZlZWRkZGQwZjAwMDBlZmVlZmVmZmZmMDBmZmYwZWVlZWVlZmYwMDAwZWZmMGVlZWZmZWVlMGYwMGVmZjBlZWZlZWVlZmZlMDBlZmZmZmViYmJmZmRiZDBmZmZmZmJlZGRkZmZkZGQwZmYwZmZmZmZmZmZmZmZmMDA=",
+        "displayName": "facing right"
+    },
     "*": {
         "mimeType": "image/x-mkcd-f4",
         "dataEncoding": "base64",
