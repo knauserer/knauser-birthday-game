@@ -6,7 +6,12 @@
         "device": "*",
         "animation": "*",
         "arcade-character-animations": "github:microsoft/arcade-character-animations#v0.0.2",
-        "Timers": "github:microsoft/arcade-timers#v1.1.0"
+        "Timers": "github:microsoft/arcade-timers#v1.1.0",
+        "grafxkid-tiles": "github:riknoll/grafxkid-tiles#v2.0.1",
+        "arcade-mini-menu": "github:riknoll/arcade-mini-menu#v0.0.1",
+        "arcade-text": "github:microsoft/arcade-text#v1.3.0",
+        "Color Fading": "github:jwunderl/pxt-color#v0.2.3",
+        "pxt-status-bar": "github:jwunderl/pxt-status-bar#v0.4.2"
     },
     "files": [
         "main.blocks",
@@ -22,7 +27,7 @@
         "test.ts"
     ],
     "targetVersions": {
-        "target": "2.0.56",
+        "target": "2.0.59",
         "targetId": "arcade"
     },
     "supportedTargets": [
