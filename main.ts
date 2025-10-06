@@ -2169,7 +2169,7 @@ let numberOfJumpRemaining = 0
 let mainMenuButtonASprite: Sprite = null
 let titleScreenSprite: Sprite = null
 init()
-createTitleScreen()
+startLevel()
 game.onUpdate(function () {
     if (levelStarted) {
         if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= scene.screenWidth())) {
