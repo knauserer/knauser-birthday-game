@@ -13,6 +13,8 @@ namespace SpriteKind {
     export const ClueScreenKind = SpriteKind.create()
     export const LifeKind = SpriteKind.create()
     export const BossKind = SpriteKind.create()
+    export const SnakeKind = SpriteKind.create()
+    export const SnakeBumperKind = SpriteKind.create()
 }
 function createTitleScreen () {
     fadeToWhite()
@@ -1437,6 +1439,304 @@ function createAnimations () {
 function setJumpVy (sprite: Sprite, height: number, gravity: number) {
     sprite.vy = 0 - Math.sqrt(height * (2 * gravity))
 }
+function createSnakeAnimation (sprite: Sprite) {
+    characterAnimations.loopFrames(
+    sprite,
+    [img`
+        . . . . c c c c c c . . . . . . 
+        . . . c 6 7 7 7 7 6 c . . . . . 
+        . . c 7 7 7 7 7 7 7 7 c . . . . 
+        . c 6 7 7 7 7 7 7 7 7 6 c . . . 
+        . c 7 c 6 6 6 6 c 7 7 7 c . . . 
+        . f 7 6 f 6 6 f 6 7 7 7 f . . . 
+        . f 7 7 7 7 7 7 7 7 7 7 f . . . 
+        . . f 7 7 7 7 6 c 7 7 6 f c . . 
+        . . . f c c c c 7 7 6 f 7 7 c . 
+        . . c 7 2 7 7 7 6 c f 7 7 7 7 c 
+        . c 7 7 2 7 7 c f c 6 7 7 6 c c 
+        c 1 1 1 1 7 6 f c c 6 6 6 c . . 
+        f 1 1 1 1 1 6 6 c 6 6 6 6 f . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 c f . . 
+        . f 6 1 1 1 1 1 1 6 6 6 f . . . 
+        . . c c c c c c c c c f . . . . 
+        `,img`
+        . . . c c c c c c . . . . . . . 
+        . . c 6 7 7 7 7 6 c . . . . . . 
+        . c 7 7 7 7 7 7 7 7 c . . . . . 
+        c 6 7 7 7 7 7 7 7 7 6 c . . . . 
+        c 7 c 6 6 6 6 c 7 7 7 c . . . . 
+        f 7 6 f 6 6 f 6 7 7 7 f . . . . 
+        f 7 7 7 7 7 7 7 7 7 7 f . . . . 
+        . f 7 7 7 7 6 c 7 7 6 f . . . . 
+        . . f c c c c 7 7 6 f c c c . . 
+        . . c 6 2 7 7 7 f c c 7 7 7 c . 
+        . c 6 7 7 2 7 7 c f 6 7 7 7 7 c 
+        . c 1 1 1 1 7 6 6 c 6 6 6 c c c 
+        . c 1 1 1 1 1 6 6 6 6 6 6 c . . 
+        . c 6 1 1 1 1 1 6 6 6 6 6 c . . 
+        . . c 6 1 1 1 1 1 7 6 6 c c . . 
+        . . . c c c c c c c c c c . . . 
+        `],
+    200,
+    characterAnimations.rule(Predicate.MovingLeft)
+    )
+    characterAnimations.loopFrames(
+    sprite,
+    [img`
+        . . . . . . c c c c c c . . . . 
+        . . . . . c 6 7 7 7 7 6 c . . . 
+        . . . . c 7 7 7 7 7 7 7 7 c . . 
+        . . . c 6 7 7 7 7 7 7 7 7 6 c . 
+        . . . c 7 7 7 c 6 6 6 6 c 7 c . 
+        . . . f 7 7 7 6 f 6 6 f 6 7 f . 
+        . . . f 7 7 7 7 7 7 7 7 7 7 f . 
+        . . c f 6 7 7 c 6 7 7 7 7 f . . 
+        . c 7 7 f 6 7 7 c c c c f . . . 
+        c 7 7 7 7 f c 6 7 7 7 2 7 c . . 
+        c c 6 7 7 6 c f c 7 7 2 7 7 c . 
+        . . c 6 6 6 c c f 6 7 1 1 1 1 c 
+        . . f 6 6 6 6 c 6 6 1 1 1 1 1 f 
+        . . f c 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . f 6 6 6 1 1 1 1 1 1 6 f . 
+        . . . . f c c c c c c c c c . . 
+        `,img`
+        . . . . . . . c c c c c c . . . 
+        . . . . . . c 6 7 7 7 7 6 c . . 
+        . . . . . c 7 7 7 7 7 7 7 7 c . 
+        . . . . c 6 7 7 7 7 7 7 7 7 6 c 
+        . . . . c 7 7 7 c 6 6 6 6 c 7 c 
+        . . . . f 7 7 7 6 f 6 6 f 6 7 f 
+        . . . . f 7 7 7 7 7 7 7 7 7 7 f 
+        . . . . f 6 7 7 c 6 7 7 7 7 f . 
+        . . c c c f 6 7 7 c c c c f . . 
+        . c 7 7 7 c c f 7 7 7 2 6 c . . 
+        c 7 7 7 7 6 f c 7 7 2 7 7 6 c . 
+        c c c 6 6 6 c 6 6 7 1 1 1 1 c . 
+        . . c 6 6 6 6 6 6 1 1 1 1 1 c . 
+        . . c 6 6 6 6 6 1 1 1 1 1 6 c . 
+        . . c c 6 6 7 1 1 1 1 1 6 c . . 
+        . . . c c c c c c c c c c . . . 
+        `],
+    200,
+    characterAnimations.rule(Predicate.MovingRight)
+    )
+    characterAnimations.runFrames(
+    sprite,
+    [img`
+        . . . . . c c c c c c c . . . . 
+        . . . . c 6 7 7 7 7 7 6 c . . . 
+        . . . c 7 c 6 6 6 6 c 7 6 c . . 
+        . . c 6 7 6 f 6 6 f 6 7 7 c . . 
+        . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+        . . f 7 8 1 f f 1 6 7 7 7 f . . 
+        . . f 6 f 1 f f 1 f 7 7 7 f . . 
+        . . . f f 2 2 2 2 f 7 7 6 f . . 
+        . . c c f 2 2 2 2 7 7 6 f c . . 
+        . c 7 7 7 7 7 7 7 7 c c 7 7 c . 
+        c 7 1 1 1 7 7 7 7 f c 6 7 7 7 c 
+        f 1 1 1 1 1 7 6 f c c 6 6 6 c c 
+        f 1 1 1 1 1 1 6 6 c 6 6 6 c . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
+        . f 6 1 1 1 1 1 6 6 6 6 c . . . 
+        . . f f c c c c c c c c . . . . 
+        `,img`
+        . . . . . . c c c c c c c . . . 
+        . . . . . c f f 6 6 f f 7 c . . 
+        . . . . c 7 6 6 6 6 6 6 7 6 c . 
+        . . . c 7 7 7 7 7 7 7 7 7 7 c . 
+        . . . c 7 8 1 f f 1 6 7 7 7 c . 
+        . . . f 6 f 1 f f 1 f 7 7 7 f . 
+        . . . f 6 f 2 2 2 2 f 7 7 7 f . 
+        . . c c 6 f 2 2 2 2 f 7 7 6 f . 
+        . c 7 7 7 7 2 2 2 2 7 7 f c . . 
+        c 7 1 1 1 7 7 7 7 7 c c 7 7 c . 
+        f 1 1 1 1 1 7 7 7 f c 6 7 7 7 c 
+        f 1 1 1 1 1 1 6 f c c 6 6 6 c c 
+        f 6 1 1 1 1 1 6 6 c 6 6 6 c . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
+        . f 6 1 1 1 1 6 6 6 6 6 c . . . 
+        . . f f c c c c c c c c . . . . 
+        `,img`
+        . . . . . . c c c c c c c . . . 
+        . . . . . c f f 6 6 f f 7 c . . 
+        . . . . c 7 6 6 6 6 6 6 7 6 c . 
+        . . . c 7 7 7 7 7 7 7 7 7 7 c . 
+        . . . c 7 8 1 f f 1 6 7 7 7 c . 
+        . . . f 6 f 1 f f 1 f 7 7 7 f . 
+        . . . f 6 f 2 2 2 2 f 7 7 7 f . 
+        . . c c 6 f 2 2 2 2 f 7 7 6 f . 
+        . c 7 7 7 7 2 2 2 2 7 7 f c . . 
+        c 7 1 1 1 7 7 7 7 7 c c 7 7 c . 
+        f 1 1 1 1 1 7 7 7 f c 6 7 7 7 c 
+        f 1 1 1 1 1 1 6 f c c 6 6 6 c c 
+        f 6 1 1 1 1 1 6 6 c 6 6 6 c . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
+        . f 6 1 1 1 1 6 6 6 6 6 c . . . 
+        . . f f c c c c c c c c . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . c c c c c 
+        . . . . . . . . . c c 7 7 7 6 c 
+        . . . . . . . . c c 7 7 7 c c . 
+        . . . . . . . . c 6 7 7 c . . . 
+        . . . . . . . . c 6 6 6 c . . . 
+        . . . c c c c c c 6 6 6 c c . . 
+        . . c 6 7 7 7 7 6 c c 6 6 6 c . 
+        . c 7 7 7 7 7 7 7 7 c 6 6 6 c c 
+        c 6 7 7 7 7 7 7 7 7 6 c 6 6 6 c 
+        c 7 c 6 6 6 6 c 7 7 7 c 6 6 6 c 
+        f 7 c c 6 6 c c 7 7 7 f 6 6 6 c 
+        f 7 6 f 6 6 f 6 7 7 7 f 6 6 6 c 
+        . c 1 c f f 1 c 7 6 f 6 6 c c . 
+        . c c c c c c c c c c c c . . . 
+        `,img`
+        . . . . . . . . . . . c c c c c 
+        . . . . . . . . . c c 7 7 7 6 c 
+        . . . . . . . . c c 7 7 7 c c . 
+        . . . . . . . . c 6 7 7 c . . . 
+        . . . . . . . . c 6 6 6 c . . . 
+        . . . . . . . . c 6 6 6 c c . . 
+        . . . c c c c c c c 6 6 6 c c . 
+        . . c 6 7 7 7 7 6 c c 6 6 6 c . 
+        . c 7 7 7 7 7 7 7 7 c 6 6 6 c c 
+        c 6 7 7 7 7 7 7 7 7 6 c 6 6 6 c 
+        c 7 c 6 6 6 6 c 7 7 7 c 6 6 6 c 
+        f 7 c c 6 6 c c 7 7 7 f 6 6 6 c 
+        f 7 6 f 6 6 f 6 7 7 7 f 6 6 6 c 
+        . f 7 7 7 7 7 7 7 7 6 f 6 6 c . 
+        . c 1 c f f 1 c 7 6 f 6 6 c c . 
+        . c c c c c c c c c c c c . . . 
+        `,img`
+        . . . . . . . . . . . c c c c c 
+        . . . . . . . . . c c 7 7 7 6 c 
+        . . . . . . . . c c 7 7 7 c c . 
+        . . . . . . . . c 6 7 7 c . . . 
+        . . . . . . . . c 6 6 6 c . . . 
+        . . . . . . . . c 6 6 6 c c . . 
+        . . . c c c c c c c 6 6 6 c c . 
+        . . c 6 7 7 7 7 6 c c 6 6 6 c . 
+        . c 7 7 7 7 7 7 7 7 c 6 6 6 c c 
+        c 6 7 7 7 7 7 7 7 7 6 c 6 6 6 c 
+        c 7 c 6 6 6 6 c 7 7 7 c 6 6 6 c 
+        f 7 c c 6 6 c c 7 7 7 f 6 6 6 c 
+        f 7 6 f 6 6 f 6 7 7 7 f 6 6 6 c 
+        . f 7 7 7 7 7 7 7 7 6 f 6 6 c . 
+        . c 1 c f f 1 c 7 6 f 6 6 c c . 
+        . c c c c c c c c c c c c . . . 
+        `],
+    100,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft)
+    )
+    characterAnimations.runFrames(
+    sprite,
+    [img`
+        . . . . c c c c c c c . . . . . 
+        . . . c 6 7 7 7 7 7 6 c . . . . 
+        . . c 6 7 c 6 6 6 6 c 7 c . . . 
+        . . c 7 7 6 f 6 6 f 6 7 6 c . . 
+        . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+        . . f 7 7 7 6 1 f f 1 8 7 f . . 
+        . . f 7 7 7 f 1 f f 1 f 6 f . . 
+        . . f 6 7 7 f 2 2 2 2 f f . . . 
+        . . c f 6 7 7 2 2 2 2 f c c . . 
+        . c 7 7 c c 7 7 7 7 7 7 7 7 c . 
+        c 7 7 7 6 c f 7 7 7 7 1 1 1 7 c 
+        c c 6 6 6 c c f 6 7 1 1 1 1 1 f 
+        . . c 6 6 6 c 6 6 1 1 1 1 1 1 f 
+        . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . c 6 6 6 6 1 1 1 1 1 6 f . 
+        . . . . c c c c c c c c f f . . 
+        `,img`
+        . . . c c c c c c c . . . . . . 
+        . . c 7 f f 6 6 f f c . . . . . 
+        . c 6 7 6 6 6 6 6 6 7 c . . . . 
+        . c 7 7 7 7 7 7 7 7 7 7 c . . . 
+        . c 7 7 7 6 1 f f 1 8 7 c . . . 
+        . f 7 7 7 f 1 f f 1 f 6 f . . . 
+        . f 7 7 7 f 2 2 2 2 f 6 f . . . 
+        . f 6 7 7 f 2 2 2 2 f 6 c c . . 
+        . . c f 7 7 2 2 2 2 7 7 7 7 c . 
+        . c 7 7 c c 7 7 7 7 7 1 1 1 7 c 
+        c 7 7 7 6 c f 7 7 7 1 1 1 1 1 f 
+        c c 6 6 6 c c f 6 1 1 1 1 1 1 f 
+        . . c 6 6 6 c 6 6 1 1 1 1 1 6 f 
+        . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . c 6 6 6 6 6 1 1 1 1 6 f . 
+        . . . . c c c c c c c c f f . . 
+        `,img`
+        . . . c c c c c c c . . . . . . 
+        . . c 7 f f 6 6 f f c . . . . . 
+        . c 6 7 6 6 6 6 6 6 7 c . . . . 
+        . c 7 7 7 7 7 7 7 7 7 7 c . . . 
+        . c 7 7 7 6 1 f f 1 8 7 c . . . 
+        . f 7 7 7 f 1 f f 1 f 6 f . . . 
+        . f 7 7 7 f 2 2 2 2 f 6 f . . . 
+        . f 6 7 7 f 2 2 2 2 f 6 c c . . 
+        . . c f 7 7 2 2 2 2 7 7 7 7 c . 
+        . c 7 7 c c 7 7 7 7 7 1 1 1 7 c 
+        c 7 7 7 6 c f 7 7 7 1 1 1 1 1 f 
+        c c 6 6 6 c c f 6 1 1 1 1 1 1 f 
+        . . c 6 6 6 c 6 6 1 1 1 1 1 6 f 
+        . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . c 6 6 6 6 6 1 1 1 1 6 f . 
+        . . . . c c c c c c c c f f . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        c c c c c . . . . . . . . . . . 
+        c 6 7 7 7 c c . . . . . . . . . 
+        . c c 7 7 7 c c . . . . . . . . 
+        . . . c 7 7 6 c . . . . . . . . 
+        . . . c 6 6 6 c . . . . . . . . 
+        . . c c 6 6 6 c c c c c c . . . 
+        . c 6 6 6 c c 6 7 7 7 7 6 c . . 
+        c c 6 6 6 c 7 7 7 7 7 7 7 7 c . 
+        c 6 6 6 c 6 7 7 7 7 7 7 7 7 6 c 
+        c 6 6 6 c 7 7 7 c 6 6 6 6 c 7 c 
+        c 6 6 6 f 7 7 7 c c 6 6 c c 7 f 
+        c 6 6 6 f 7 7 7 6 f 6 6 f 6 7 f 
+        . c c 6 6 f 6 7 c 1 f f c 1 c . 
+        . . . c c c c c c c c c c c c . 
+        `,img`
+        c c c c c . . . . . . . . . . . 
+        c 6 7 7 7 c c . . . . . . . . . 
+        . c c 7 7 7 c c . . . . . . . . 
+        . . . c 7 7 6 c . . . . . . . . 
+        . . . c 6 6 6 c . . . . . . . . 
+        . . c c 6 6 6 c . . . . . . . . 
+        . c c 6 6 6 c c c c c c c . . . 
+        . c 6 6 6 c c 6 7 7 7 7 6 c . . 
+        c c 6 6 6 c 7 7 7 7 7 7 7 7 c . 
+        c 6 6 6 c 6 7 7 7 7 7 7 7 7 6 c 
+        c 6 6 6 c 7 7 7 c 6 6 6 6 c 7 c 
+        c 6 6 6 f 7 7 7 c c 6 6 c c 7 f 
+        c 6 6 6 f 7 7 7 6 f 6 6 f 6 7 f 
+        . c 6 6 f 6 7 7 7 7 7 7 7 7 f . 
+        . c c 6 6 f 6 7 c 1 f f c 1 c . 
+        . . . c c c c c c c c c c c c . 
+        `,img`
+        c c c c c . . . . . . . . . . . 
+        c 6 7 7 7 c c . . . . . . . . . 
+        . c c 7 7 7 c c . . . . . . . . 
+        . . . c 7 7 6 c . . . . . . . . 
+        . . . c 6 6 6 c . . . . . . . . 
+        . . c c 6 6 6 c . . . . . . . . 
+        . c c 6 6 6 c c c c c c c . . . 
+        . c 6 6 6 c c 6 7 7 7 7 6 c . . 
+        c c 6 6 6 c 7 7 7 7 7 7 7 7 c . 
+        c 6 6 6 c 6 7 7 7 7 7 7 7 7 6 c 
+        c 6 6 6 c 7 7 7 c 6 6 6 6 c 7 c 
+        c 6 6 6 f 7 7 7 c c 6 6 c c 7 f 
+        c 6 6 6 f 7 7 7 6 f 6 6 f 6 7 f 
+        . c 6 6 f 6 7 7 7 7 7 7 7 7 f . 
+        . c c 6 6 f 6 7 c 1 f f c 1 c . 
+        . . . c c c c c c c c c c c c . 
+        `],
+    100,
+    characterAnimations.rule(Predicate.NotMoving, Predicate.FacingRight)
+    )
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, otherSprite) {
     if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
         if (!(isBossHit)) {
@@ -1513,6 +1813,7 @@ function init () {
     bossLife = 100
     isBossHit = false
     isBossHitInvisible = false
+    snakeSpeed = 20
     hero.ay = gravity
     hero.setFlag(SpriteFlag.BounceOnWall, false)
     hero.setFlag(SpriteFlag.StayInScreen, true)
@@ -1521,6 +1822,44 @@ function init () {
     createAnimations()
     info.setScore(0)
     info.setLife(3)
+}
+sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, otherSprite) {
+    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
+        sprites.changeDataNumberBy(otherSprite, "life", -1)
+        if (sprites.readDataNumber(otherSprite, "life") <= 0) {
+            info.changeScoreBy(3)
+            sprites.destroy(otherSprite, effects.disintegrate, 50)
+        }
+        sprite.vy = -150
+        music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
+    } else if (!(isPlayerHit)) {
+        isPlayerHit = true
+        info.changeLifeBy(-1)
+        otherSprite.vx = 0
+        controller.moveSprite(hero, 0, 0)
+        if (sprite.x < otherSprite.x) {
+            sprite.vx = -200
+        } else {
+            sprite.vx = 200
+        }
+        timer.after(100, function () {
+            hero.vx = 0
+            controller.moveSprite(hero, walkingSpeed, 0)
+        })
+        music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
+        timer.after(500, function () {
+            isPlayerHit = false
+            hero.setFlag(SpriteFlag.Invisible, false)
+            if (Math.percentChance(50)) {
+                otherSprite.vx = snakeSpeed
+            } else {
+                otherSprite.vx = 0 - snakeSpeed
+            }
+        })
+    }
+})
+function moveSnake () {
+	
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, otherSprite) {
     controller.moveSprite(hero, 0, 0)
@@ -1565,6 +1904,13 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, oth
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile2`, function (sprite, location) {
     doHitBadTile(sprite)
+})
+sprites.onOverlap(SpriteKind.SnakeKind, SpriteKind.SnakeBumperKind, function (sprite, otherSprite) {
+    if (sprite.vx <= 0) {
+        snake.vx = snakeSpeed
+    } else {
+        snake.vx = 0 - snakeSpeed
+    }
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.LifeKind, function (sprite, otherSprite) {
     if (info.life() < maxLife) {
@@ -2076,6 +2422,54 @@ function startLevel () {
         tiles.placeOnTile(flower, value)
         tiles.setTileAt(value, assets.tile`transparency16`)
     }
+    for (let value of tiles.getTilesByType(assets.tile`myTile8`)) {
+        snake = sprites.create(img`
+            . . . . c c c c c c . . . . . . 
+            . . . c 6 7 7 7 7 6 c . . . . . 
+            . . c 7 7 7 7 7 7 7 7 c . . . . 
+            . c 6 7 7 7 7 7 7 7 7 6 c . . . 
+            . c 7 c 6 6 6 6 c 7 7 7 c . . . 
+            . f 7 6 f 6 6 f 6 7 7 7 f . . . 
+            . f 7 7 7 7 7 7 7 7 7 7 f . . . 
+            . . f 7 7 7 7 6 c 7 7 6 f c . . 
+            . . . f c c c c 7 7 6 f 7 7 c . 
+            . . c 7 2 7 7 7 6 c f 7 7 7 7 c 
+            . c 7 7 2 7 7 c f c 6 7 7 6 c c 
+            c 1 1 1 1 7 6 f c c 6 6 6 c . . 
+            f 1 1 1 1 1 6 6 c 6 6 6 6 f . . 
+            f 6 1 1 1 1 1 6 6 6 6 6 c f . . 
+            . f 6 1 1 1 1 1 1 6 6 6 f . . . 
+            . . c c c c c c c c c f . . . . 
+            `, SpriteKind.SnakeKind)
+        sprites.setDataNumber(snake, "life", 2)
+        tiles.placeOnTile(snake, value)
+        tiles.setTileAt(value, assets.tile`transparency16`)
+        createSnakeAnimation(snake)
+        snake.vx = 0 - snakeSpeed
+    }
+    for (let value of tiles.getTilesByType(assets.tile`myTile10`)) {
+        snakeBumper = sprites.create(img`
+            f f f f f f f f f f f f f f f f 
+            f f f f f f f f f f f f f f f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f 4 4 4 4 4 4 4 4 4 4 4 4 f f 
+            f f f f f f f f f f f f f f f f 
+            f f f f f f f f f f f f f f f f 
+            `, SpriteKind.SnakeBumperKind)
+        tiles.placeOnTile(snakeBumper, value)
+        tiles.setTileAt(value, assets.tile`transparency16`)
+        snakeBumper.setFlag(SpriteFlag.Invisible, true)
+    }
     for (let value of tiles.getTilesByType(assets.tile`myTile9`)) {
         boss = sprites.create(assets.image`myImage11`, SpriteKind.BossKind)
         tiles.placeOnTile(boss, value)
@@ -2131,6 +2525,7 @@ function fadeToBlack () {
     color.pauseUntilFadeDone()
     color.startFade(color.Black, color.originalPalette, 500)
 }
+let snakeBumper: Sprite = null
 let flower: Sprite = null
 let life: Sprite = null
 let coin: Sprite = null
@@ -2138,7 +2533,9 @@ let chest: Sprite = null
 let beeOffset = 0
 let bee: Sprite = null
 let mainMenu: miniMenu.MenuSprite = null
+let snake: Sprite = null
 let scroll: Sprite = null
+let snakeSpeed = 0
 let isBossHitInvisible = false
 let maxLife = 0
 let isPlayerHitInvisible = false
@@ -2183,6 +2580,7 @@ game.onUpdate(function () {
         } else {
             hero.ay = gravity
         }
+        moveSnake()
         moveBoss()
     }
 })
