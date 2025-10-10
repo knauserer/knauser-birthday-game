@@ -16,6 +16,9 @@ namespace SpriteKind {
     export const SnakeKind = SpriteKind.create()
     export const SnakeBumperKind = SpriteKind.create()
 }
+namespace StatusBarKind {
+    export const BossHealth = StatusBarKind.create()
+}
 function createTitleScreen () {
     fadeToWhite()
     titleScreenSprite = sprites.create(img`
@@ -212,6 +215,36 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (sprite.isHittingTile(CollisionDirection.Bottom)) {
         numberOfJumpRemaining = numberOfJumps
     }
+})
+statusbars.onZero(StatusBarKind.BossHealth, function (status) {
+    sprites.destroy(boss, effects.disintegrate, 50)
+    chest = sprites.create(img`
+        . . b b b b b b b b b b b b . . 
+        . b e 4 4 4 4 4 4 4 4 4 4 e b . 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e e 4 4 4 4 4 4 4 4 4 4 e e b 
+        b e e e e e e e e e e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b b b b b b b d d b b b b b b b 
+        c b b b b b b c c b b b b b b c 
+        c c c c c c b c c b c c c c c c 
+        b e e e e e c b b c e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b c e e e e e e e e e e e e c b 
+        b b b b b b b b b b b b b b b b 
+        . b b . . . . . . . . . . b b . 
+        `, SpriteKind.ChestKind)
+    if (hero.x < scene.screenWidth() * 0.5) {
+        chest.x = hero.x + 64
+    } else {
+        chest.x = hero.x - 64
+    }
+    chest.y = Math.constrain(hero.y - 80, chest.height, scene.screenHeight())
+    chest.z = -1
+    chest.ay = gravity
+    chest.setBounceOnWall(false)
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
     doHitBadTile(sprite)
@@ -1436,6 +1469,10 @@ function createAnimations () {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft, Predicate.HittingWallDown)
     )
 }
+statusbars.onStatusReached(StatusBarKind.BossHealth, statusbars.StatusComparison.LTE, statusbars.ComparisonType.Percentage, 35, function (status) {
+    bossAcceleration = bossVelocity * 1.65
+    bossVelocity = bossAcceleration * 1.65
+})
 function setJumpVy (sprite: Sprite, height: number, gravity: number) {
     sprite.vy = 0 - Math.sqrt(height * (2 * gravity))
 }
@@ -1742,7 +1779,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, othe
         if (!(isBossHit)) {
             info.changeScoreBy(3)
             isBossHit = true
-            bossStatusBar.value += 0 - bossLife / 4
+            bossStatusBar.value += 0 - bossLife / bossMaxLifes
+            spawnBee()
             timer.after(500, function () {
                 isBossHit = false
                 boss.setFlag(SpriteFlag.Invisible, false)
@@ -1759,30 +1797,6 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, othe
         music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
     }
 })
-function moveBoss () {
-    if (isBossFightStarted && currentLevelCode == levelCodeBoss) {
-        if (hero.x < boss.x) {
-            if (isBossHit) {
-                boss.setImage(assets.image`myImage12`)
-            } else {
-                boss.setImage(assets.image`myImage11`)
-            }
-        } else {
-            if (isBossHit) {
-                boss.setImage(assets.image`myImage13`)
-            } else {
-                boss.setImage(assets.image`myImage8`)
-            }
-        }
-        if (boss.x < boss.width * 0.55) {
-            boss.ax = bossAcceleration
-            boss.vx = bossVelocity
-        } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
-            boss.ax = 0 - bossAcceleration
-            boss.vx = 0 - bossVelocity
-        }
-    }
-}
 function init () {
     hero = sprites.create(assets.image`monkey`, SpriteKind.Player)
     hero.setFlag(SpriteFlag.Invisible, true)
@@ -1803,7 +1817,7 @@ function init () {
     isPlayerHitInvisible = false
     maxLife = 5
     levelStarted = false
-    currentLevelCode = ""
+    currentLevelCode = "aa"
     levelCode0 = "aa"
     levelCode1 = "aabb"
     levelCodeBoss = "aabbcc"
@@ -1814,6 +1828,8 @@ function init () {
     isBossHit = false
     isBossHitInvisible = false
     snakeSpeed = 20
+    bossSpawnBeeTime = 0
+    bossMaxLifes = 4
     hero.ay = gravity
     hero.setFlag(SpriteFlag.BounceOnWall, false)
     hero.setFlag(SpriteFlag.StayInScreen, true)
@@ -1858,10 +1874,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, oth
         })
     }
 })
-function moveSnake () {
-	
-}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, otherSprite) {
+    otherSprite.ay = 0
     controller.moveSprite(hero, 0, 0)
     otherSprite.setFlag(SpriteFlag.Ghost, true)
     otherSprite.setImage(img`
@@ -1906,12 +1920,34 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile2`, function (sprite, l
     doHitBadTile(sprite)
 })
 sprites.onOverlap(SpriteKind.SnakeKind, SpriteKind.SnakeBumperKind, function (sprite, otherSprite) {
-    if (sprite.vx <= 0) {
-        snake.vx = snakeSpeed
-    } else {
-        snake.vx = 0 - snakeSpeed
+    if (sprite.vx <= 0 && sprite.left <= otherSprite.right) {
+        sprite.vx = snakeSpeed
+    } else if (sprite.vx > 0 && sprite.right >= otherSprite.left) {
+        sprite.vx = 0 - snakeSpeed
     }
 })
+function doBossFight () {
+    if (hero.x < boss.x) {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage12`)
+        } else {
+            boss.setImage(assets.image`myImage11`)
+        }
+    } else {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage13`)
+        } else {
+            boss.setImage(assets.image`myImage8`)
+        }
+    }
+    if (boss.x < boss.width * 0.55) {
+        boss.ax = bossAcceleration
+        boss.vx = bossVelocity
+    } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
+        boss.ax = 0 - bossAcceleration
+        boss.vx = 0 - bossVelocity
+    }
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.LifeKind, function (sprite, otherSprite) {
     if (info.life() < maxLife) {
         info.changeLifeBy(1)
@@ -2013,36 +2049,7 @@ function createMenu () {
 sprites.onOverlap(SpriteKind.Player, SpriteKind.FlowerKind, function (sprite, otherSprite) {
     music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
     sprites.destroy(otherSprite, effects.disintegrate, 50)
-    bee = sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `, SpriteKind.Enemy)
-    animation.runImageAnimation(
-    bee,
-    assets.animation`myAnim`,
-    100,
-    true
-    )
-    beeOffset = 100
-    if (Math.percentChance(50)) {
-        beeOffset = beeOffset * -1
-    }
-    bee.setPosition(hero.x + beeOffset, hero.y - 80)
-    bee.follow(hero, enemySpeed)
+    spawnBee()
 })
 function doJump () {
     if (numberOfJumpRemaining > 0) {
@@ -2446,6 +2453,7 @@ function startLevel () {
         tiles.setTileAt(value, assets.tile`transparency16`)
         createSnakeAnimation(snake)
         snake.vx = 0 - snakeSpeed
+        snake.ay = gravity
     }
     for (let value of tiles.getTilesByType(assets.tile`myTile10`)) {
         snakeBumper = sprites.create(img`
@@ -2482,7 +2490,7 @@ function startLevel () {
         )
         timer.after(3000, function () {
             animation.stopAnimation(animation.AnimationTypes.All, boss)
-            bossStatusBar = statusbars.create(60, 8, StatusBarKind.Health)
+            bossStatusBar = statusbars.create(60, 8, StatusBarKind.BossHealth)
             bossStatusBar.setBarBorder(1, 15)
             bossStatusBar.setColor(5, 0, 4)
             bossStatusBar.positionDirection(CollisionDirection.Bottom)
@@ -2491,15 +2499,53 @@ function startLevel () {
             bossStatusBar.setStatusBarFlag(StatusBarFlag.SmoothTransition, true)
             isBossFightStarted = true
             boss.ax = 0 - bossAcceleration
+            bossSpawnBeeTime = game.runtime()
         })
     }
     levelStarted = true
     hero.setFlag(SpriteFlag.Invisible, false)
-    controller.moveSprite(hero, walkingSpeed, 0)
     hero.vx = walkingSpeed
     timer.after(150, function () {
         hero.vx = 0
+        controller.moveSprite(hero, walkingSpeed, 0)
+        if (currentLevelCode == levelCodeBoss) {
+            hero.sayText("WAAAAH!", 2000, true)
+        } else {
+            hero.sayText("Los gehts!", 2000, true)
+        }
     })
+}
+function spawnBee () {
+    bee = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.Enemy)
+    animation.runImageAnimation(
+    bee,
+    assets.animation`myAnim`,
+    100,
+    true
+    )
+    beeOffset = randint(0, 100)
+    if (Math.percentChance(50)) {
+        beeOffset = beeOffset * -1
+    }
+    bee.setPosition(Math.constrain(hero.x + beeOffset, 0, scene.screenWidth()), Math.constrain(hero.y - 80, bee.height, scene.screenHeight()))
+    bee.follow(hero, enemySpeed)
 }
 function fadeToWhite () {
     color.startFade(color.originalPalette, color.White, 500)
@@ -2525,18 +2571,20 @@ function fadeToBlack () {
     color.pauseUntilFadeDone()
     color.startFade(color.Black, color.originalPalette, 500)
 }
+let beeOffset = 0
+let bee: Sprite = null
 let snakeBumper: Sprite = null
+let snake: Sprite = null
 let flower: Sprite = null
 let life: Sprite = null
 let coin: Sprite = null
-let chest: Sprite = null
-let beeOffset = 0
-let bee: Sprite = null
 let mainMenu: miniMenu.MenuSprite = null
 let snake: Sprite = null
 let scroll: Sprite = null
+let bossSpawnBeeTime = 0
 let snakeSpeed = 0
 let isBossHitInvisible = false
+let isBossFightStarted = false
 let maxLife = 0
 let isPlayerHitInvisible = false
 let enemySpeed = 0
@@ -2549,22 +2597,23 @@ let isWalking = false
 let isFacingLeft = false
 let wallJumpHeight = 0
 let jumpHeight = 0
-let gravity = 0
-let bossVelocity = 0
-let bossAcceleration = 0
-let isBossFightStarted = false
-let boss: Sprite = null
+let bossMaxLifes = 0
 let bossLife = 0
 let bossStatusBar: StatusBarSprite = null
 let isBossHit = false
 let isPlayerHit = false
-let hero: Sprite = null
+let bossVelocity = 0
+let bossAcceleration = 0
 let levelStarted = false
 let levelCodeBoss = ""
 let levelCode1 = ""
 let levelCode0 = ""
 let currentLevelCode = ""
 let clueScreen: Sprite = null
+let gravity = 0
+let hero: Sprite = null
+let chest: Sprite = null
+let boss: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
 let mainMenuButtonASprite: Sprite = null
@@ -2573,15 +2622,22 @@ init()
 startLevel()
 game.onUpdate(function () {
     if (levelStarted) {
-        if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= scene.screenWidth())) {
+        if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= tiles.tilemapColumns() * tiles.tileWidth())) {
             hero.vy = 0
             hero.ay = 0
             numberOfJumpRemaining = numberOfJumps
         } else {
             hero.ay = gravity
         }
-        moveSnake()
-        moveBoss()
+        if (isBossFightStarted && currentLevelCode == levelCodeBoss) {
+            doBossFight()
+            if (game.runtime() - bossSpawnBeeTime > 5000) {
+                bossSpawnBeeTime = game.runtime()
+                if (Math.percentChance(0)) {
+                    spawnBee()
+                }
+            }
+        }
     }
 })
 game.onUpdateInterval(50, function () {
