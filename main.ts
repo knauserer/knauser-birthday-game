@@ -2579,6 +2579,7 @@ let flower: Sprite = null
 let life: Sprite = null
 let coin: Sprite = null
 let mainMenu: miniMenu.MenuSprite = null
+let snake: Sprite = null
 let scroll: Sprite = null
 let bossSpawnBeeTime = 0
 let snakeSpeed = 0
