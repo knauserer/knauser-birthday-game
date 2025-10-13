@@ -1945,12 +1945,13 @@ function introCutscene () {
         timer.after(500, function () {
             hero.vx = 0
         })
+        pause(1500)
         story.spriteSayText(hero, "Juhuu! Ich habe Geburtstag!!!")
         hero.vx = walkingSpeed
         timer.after(7500, function () {
             hero.vx = 0
         })
-        pause(1000)
+        pause(1500)
         story.spriteSayText(hero, "ABER.....")
         hero.vx = 0 - walkingSpeed
         timer.after(500, function () {
@@ -1973,8 +1974,9 @@ function introCutscene () {
         hero.vx = walkingSpeed
         pause(1000)
         fadeToBlack()
-        color.pauseUntilFadeDone()
-        startLevel()
+        timer.after(250, function () {
+            startLevel()
+        })
     })
 }
 function init () {
@@ -2017,8 +2019,6 @@ function init () {
     game.setGameOverEffect(false, effects.melt)
     game.setGameOverPlayable(false, music.melodyPlayable(music.powerDown), false)
     createAnimations()
-    info.setScore(0)
-    info.setLife(3)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, otherSprite) {
     if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
@@ -2274,6 +2274,8 @@ function startLevel () {
     } else if (currentLevelCode == levelCodeEnd) {
         tiles.setCurrentTilemap(tilemap`level2`)
     } else {
+        info.setScore(0)
+        info.setLife(3)
         tiles.setCurrentTilemap(tilemap`level6`)
     }
     scene.setBackgroundImage(img`
@@ -2407,8 +2409,8 @@ function startLevel () {
             tiles.setTileAt(value, assets.tile`myTile2`)
         }
     }
-    for (let value2 of tiles.getTilesByType(assets.tile`start_tile`)) {
-        tiles.setTileAt(value2, assets.tile`transparency16`)
+    for (let value22 of tiles.getTilesByType(assets.tile`start_tile`)) {
+        tiles.setTileAt(value22, assets.tile`transparency16`)
     }
     for (let value3 of tiles.getTilesByType(assets.tile`end_tile`)) {
         tiles.setTileAt(value3, assets.tile`transparency16`)
@@ -2733,6 +2735,7 @@ function spawnBee () {
 function fadeToWhite () {
     color.startFade(color.originalPalette, color.White, 500)
     color.pauseUntilFadeDone()
+    pause(500)
     color.startFade(color.White, color.originalPalette, 500)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
@@ -2752,6 +2755,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 function fadeToBlack () {
     color.startFade(color.originalPalette, color.Black, 500)
     color.pauseUntilFadeDone()
+    pause(500)
     color.startFade(color.Black, color.originalPalette, 500)
 }
 let beeOffset = 0
