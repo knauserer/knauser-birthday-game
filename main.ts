@@ -17,6 +17,7 @@ namespace SpriteKind {
     export const SnakeBumperKind = SpriteKind.create()
     export const GoalKind = SpriteKind.create()
     export const StepKind = SpriteKind.create()
+    export const EndScreen = SpriteKind.create()
 }
 namespace StatusBarKind {
     export const BossHealth = StatusBarKind.create()
@@ -112,11 +113,9 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, othe
         story.setSoundEnabled(true)
         controller.moveSprite(hero, 0, 0)
         story.spriteSayText(hero, "JUHUUUU!!!")
-        pause(2000)
-        fadeToBlack()
-        timer.after(250, function () {
-            game.gameOver(true)
-        })
+        pause(1000)
+        effects.clearParticles(goal)
+        createEndScreen()
     })
 })
 statusbars.onZero(StatusBarKind.BossHealth, function (status) {
@@ -1574,6 +1573,75 @@ function outroCutscene () {
         story.spriteSayText(hero, "Los gehts!")
     })
 }
+function createEndScreen () {
+    fadeToBlack()
+    hero.setFlag(SpriteFlag.Invisible, true)
+    endScreenSprite = sprites.create(assets.image`myImage14`, SpriteKind.EndScreen)
+    scene.centerCameraAt(endScreenSprite.x, endScreenSprite.y)
+    mainMenuButtonASprite = sprites.create(img`
+        . . . . 6 6 6 6 6 6 6 . . . . 
+        . . 6 6 7 7 7 7 7 7 7 6 6 . . 
+        . 6 6 7 7 7 8 8 8 7 7 7 6 6 . 
+        . 6 7 7 7 8 8 7 8 8 7 7 7 6 . 
+        . c 7 7 8 8 8 8 8 8 8 7 7 c . 
+        . c 9 7 8 7 7 7 7 7 8 7 9 c . 
+        . c 9 9 7 7 7 7 7 7 7 9 9 c . 
+        . c 6 6 9 9 9 9 9 9 9 6 6 c . 
+        c c 6 6 6 6 6 6 6 6 6 6 6 c c 
+        c d c c 6 6 6 6 6 6 6 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `, SpriteKind.MenuButtonKind)
+    mainMenuButtonASprite.setPosition(scene.screenWidth() * 0.9, scene.screenHeight() * 0.9)
+    animation.runImageAnimation(
+    mainMenuButtonASprite,
+    [img`
+        . . . . 6 6 6 6 6 6 6 . . . . 
+        . . 6 6 7 7 7 7 7 7 7 6 6 . . 
+        . 6 6 7 7 7 8 8 8 7 7 7 6 6 . 
+        . 6 7 7 7 8 8 7 8 8 7 7 7 6 . 
+        . c 7 7 8 8 8 8 8 8 8 7 7 c . 
+        . c 9 7 8 7 7 7 7 7 8 7 9 c . 
+        . c 9 9 7 7 7 7 7 7 7 9 9 c . 
+        . c 6 6 9 9 9 9 9 9 9 6 6 c . 
+        c c 6 6 6 6 6 6 6 6 6 6 6 c c 
+        c d c c 6 6 6 6 6 6 6 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `,img`
+        . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . 
+        . . . . 8 8 8 8 8 8 8 . . . . 
+        . . 8 8 7 7 7 7 7 7 7 8 8 . . 
+        . 8 8 7 6 6 8 8 8 6 6 7 8 8 . 
+        . 8 7 6 6 8 8 7 8 8 6 6 7 8 . 
+        . 8 6 6 8 8 8 8 8 8 8 6 6 8 . 
+        . c 8 6 8 6 7 7 7 6 8 6 8 c . 
+        c c 8 8 6 6 6 6 6 6 6 8 8 c c 
+        c d c c 8 8 8 8 8 8 8 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `],
+    500,
+    true
+    )
+    pauseUntil(() => controller.A.isPressed())
+    sprites.destroyAllSpritesOfKind(SpriteKind.MenuButtonKind)
+    effects.confetti.endScreenEffect()
+    game.gameOver(true)
+}
 function createSnakeAnimation (sprite: Sprite) {
     characterAnimations.loopFrames(
     sprite,
@@ -2689,7 +2757,6 @@ function fadeToBlack () {
 let beeOffset = 0
 let bee: Sprite = null
 let steps: Sprite = null
-let goal: Sprite = null
 let snakeBumper: Sprite = null
 let snake: Sprite = null
 let flower: Sprite = null
@@ -2717,6 +2784,7 @@ let bossLife = 0
 let bossStatusBar: StatusBarSprite = null
 let isBossHit = false
 let isPlayerHit = false
+let endScreenSprite: Sprite = null
 let bossVelocity = 0
 let bossAcceleration = 0
 let levelStarted = false
@@ -2730,6 +2798,7 @@ let clueScreen: Sprite = null
 let gravity = 0
 let chest: Sprite = null
 let boss: Sprite = null
+let goal: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
 let hero: Sprite = null
