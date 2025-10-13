@@ -16,6 +16,9 @@ namespace SpriteKind {
     export const SnakeKind = SpriteKind.create()
     export const SnakeBumperKind = SpriteKind.create()
 }
+namespace StatusBarKind {
+    export const BossHealth = StatusBarKind.create()
+}
 function createTitleScreen () {
     fadeToWhite()
     titleScreenSprite = sprites.create(img`
@@ -213,6 +216,36 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
         numberOfJumpRemaining = numberOfJumps
     }
 })
+statusbars.onZero(StatusBarKind.BossHealth, function (status) {
+    sprites.destroy(boss, effects.disintegrate, 50)
+    chest = sprites.create(img`
+        . . b b b b b b b b b b b b . . 
+        . b e 4 4 4 4 4 4 4 4 4 4 e b . 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e e 4 4 4 4 4 4 4 4 4 4 e e b 
+        b e e e e e e e e e e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b b b b b b b d d b b b b b b b 
+        c b b b b b b c c b b b b b b c 
+        c c c c c c b c c b c c c c c c 
+        b e e e e e c b b c e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b c e e e e e e e e e e e e c b 
+        b b b b b b b b b b b b b b b b 
+        . b b . . . . . . . . . . b b . 
+        `, SpriteKind.ChestKind)
+    if (hero.x < scene.screenWidth() * 0.5) {
+        chest.x = hero.x + 64
+    } else {
+        chest.x = hero.x - 64
+    }
+    chest.y = Math.constrain(hero.y - 80, chest.height, scene.screenHeight())
+    chest.z = -1
+    chest.ay = gravity
+    chest.setBounceOnWall(false)
+})
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
     doHitBadTile(sprite)
 })
@@ -401,12 +434,20 @@ function showClue () {
         f 5 d d f f . . 
         . f f f . . . . 
         `)
-    game.showLongText("HINWEIS: Gehe in die KÜCHE und suche nach Code für das nächste Level! Merke dir den Code oder schreibe ihn auf. Du musst ihn später hier eingeben :-)", DialogLayout.Center)
+    if (currentLevelCode == "") {
+        game.showLongText("HINWEIS: Geh ins WOHNZIMMER und suche nach dem Code für das nächste Level!", DialogLayout.Center)
+    } else if (currentLevelCode == levelCode0) {
+        game.showLongText("HINWEIS: Geh zu den HASEN und suche nach dem Code für das nächste Level!", DialogLayout.Center)
+    } else if (currentLevelCode == levelCode1) {
+        game.showLongText("HINWEIS: Gehe zum WEIHNACHTSBERG und suche nach dem Code für das nächste Level!", DialogLayout.Center)
+    } else if (currentLevelCode == levelCodeBoss) {
+        game.showLongText("HINWEIS: Geh in den KELLER und suche nach dem Code für das nächste Level!", DialogLayout.Center)
+    }
     createLevelMenu()
 }
 function createLevelMenu () {
     while (true) {
-        currentLevelCode = game.askForString("Welches Level?", 6, true)
+        currentLevelCode = game.askForString("Welches Level?", 9, true)
         if (currentLevelCode == levelCode0) {
             game.splash("Richtig!", "Starte Level 2...")
             break;
@@ -415,6 +456,9 @@ function createLevelMenu () {
             break;
         } else if (currentLevelCode == levelCodeBoss) {
             game.splash("Richtig!", "Starte Level 4...")
+            break;
+        } else if (currentLevelCode == levelCodeEnd) {
+            game.splash("Richtig!", "Starte letztes Level...")
             break;
         } else {
             currentLevelCode = ""
@@ -1436,6 +1480,10 @@ function createAnimations () {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft, Predicate.HittingWallDown)
     )
 }
+statusbars.onStatusReached(StatusBarKind.BossHealth, statusbars.StatusComparison.LTE, statusbars.ComparisonType.Percentage, 35, function (status) {
+    bossAcceleration = bossVelocity * 1.65
+    bossVelocity = bossAcceleration * 1.65
+})
 function setJumpVy (sprite: Sprite, height: number, gravity: number) {
     sprite.vy = 0 - Math.sqrt(height * (2 * gravity))
 }
@@ -1742,7 +1790,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, othe
         if (!(isBossHit)) {
             info.changeScoreBy(3)
             isBossHit = true
-            bossStatusBar.value += 0 - bossLife / 4
+            bossStatusBar.value += 0 - bossLife / bossMaxLifes
+            spawnBee()
             timer.after(500, function () {
                 isBossHit = false
                 boss.setFlag(SpriteFlag.Invisible, false)
@@ -1759,29 +1808,174 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, othe
         music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
     }
 })
-function moveBoss () {
-    if (isBossFightStarted && currentLevelCode == levelCodeBoss) {
-        if (hero.x < boss.x) {
-            if (isBossHit) {
-                boss.setImage(assets.image`myImage12`)
-            } else {
-                boss.setImage(assets.image`myImage11`)
-            }
-        } else {
-            if (isBossHit) {
-                boss.setImage(assets.image`myImage13`)
-            } else {
-                boss.setImage(assets.image`myImage8`)
-            }
+function introCutscene () {
+    story.startCutscene(function () {
+        story.setPagePauseLength(1000, 1000)
+        story.setSoundEnabled(true)
+        tiles.setCurrentTilemap(tilemap`level3`)
+        tiles.placeOnRandomTile(hero, assets.tile`start_tile`)
+        for (let value2 of tiles.getTilesByType(assets.tile`start_tile`)) {
+            tiles.setTileAt(value2, assets.tile`transparency16`)
         }
-        if (boss.x < boss.width * 0.55) {
-            boss.ax = bossAcceleration
-            boss.vx = bossVelocity
-        } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
-            boss.ax = 0 - bossAcceleration
-            boss.vx = 0 - bossVelocity
-        }
-    }
+        scene.cameraFollowSprite(hero)
+        hero.setFlag(SpriteFlag.Invisible, false)
+        scene.setBackgroundImage(img`
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            11111111111111111dddd111111111111111111111111111111111111dddd111111111111111111111111111111111111dddd111111111111111111111111111111111111dddd1111111111111111111
+            11111111111ddddddddddd11111111111111111111111111111ddddddddddd11111111111111111111111111111ddddddddddd11111111111111111111111111111ddddddddddd111111111111111111
+            11111111dddddddddddddd11111111111111111111111111dddddddddddddd11111111111111111111111111dddddddddddddd11111111111111111111111111dddddddddddddd111111111111111111
+            111111dddddddddddddddd111111111111111111111111dddddddddddddddd111111111111111111111111dddddddddddddddd111111111111111111111111dddddddddddddddd111111111111111111
+            11111ddddddddddddddddd11111111111111111111111ddddddddddddddddd11111111111111111111111ddddddddddddddddd11111111111111111111111ddddddddddddddddd111111111111111111
+            11111ddddddddddddddddd11111111111111111111111ddddddddddddddddd11111111111111111111111ddddddddddddddddd11111111111111111111111ddddddddddddddddd111111111111111111
+            1111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd11111111111111111
+            1111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd111111111111111111111ddddddddddddddddddd11111111111111111
+            111dddddddddddddddddddd111111ddd11111111111dddddddddddddddddddd111111ddd11111111111dddddddddddddddddddd111111ddd11111111111dddddddddddddddddddd111111ddd11111111
+            111dddddddddddddddddddd11111ddddd1111111111dddddddddddddddddddd11111ddddd1111111111dddddddddddddddddddd11111ddddd1111111111dddddddddddddddddddd11111ddddd1111111
+            11ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd1111111
+            11ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd111111111ddddddddddddddddddddd11111ddddd1111111
+            11ddddddddddddddddddddd11111dddddd11111111ddddddddddddddddddddd11111dddddd11111111ddddddddddddddddddddd11111dddddd11111111ddddddddddddddddddddd11111dddddd111111
+            1dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd111111
+            1dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd1111111dddddddddddddddddddddd11111dddddd111111
+            1dddddddddddddddddddddd1111ddddddd1111111dddddddddddddddddddddd1111ddddddd1111111dddddddddddddddddddddd1111ddddddd1111111dddddddddddddddddddddd1111ddddddd111111
+            dddddddddddddddcddddddd1111ddddddd1111dddddddddddddddddcddddddd1111ddddddd1111dddddddddddddddddcddddddd1111ddddddd1111dddddddddddddddddcddddddd1111ddddddd1111dd
+            ddddddddddddddccddddddd1111ddddddd11ddddddddddddddddddccddddddd1111ddddddd11ddddddddddddddddddccddddddd1111ddddddd11ddddddddddddddddddccddddddd1111ddddddd11dddd
+            ddddddddddddddccddddddd1111dddddddd1ddddddddddddddddddccddddddd1111dddddddd1ddddddddddddddddddccddddddd1111dddddddd1ddddddddddddddddddccddddddd1111dddddddd1dddd
+            dddddddddddddccccdddddd1111ddddddddddddddddddddddddddccccdddddd1111ddddddddddddddddddddddddddccccdddddd1111ddddddddddddddddddddddddddccccdddddd1111ddddddddddddd
+            dddddddddddcccccdddddddddddddddddddddddddddddddddddcccccdddddddddddddddddddddddddddddddddddcccccdddddddddddddddddddddddddddddddddddcccccdddddddddddddddddddddddd
+            dddddddddddddcccdddddddddddddddbbbbbbbdddddddddddddddcccdddddddddddddddbbbbbbbdddddddddddddddcccdddddddddddddddbbbbbbbdddddddddddddddcccdddddddddddddddbbbbbbbdd
+            ddddddddddddcccccddddddddddddbbbbbbbbbbbddddddddddddcccccddddddddddddbbbbbbbbbbbddddddddddddcccccddddddddddddbbbbbbbbbbbddddddddddddcccccddddddddddddbbbbbbbbbbb
+            bdddddddddddcccccccdddddddddbbbbbbbbbbbbbdddddddddddcccccccdddddddddbbbbbbbbbbbbbdddddddddddcccccccdddddddddbbbbbbbbbbbbbdddddddddddcccccccdddddddddbbbbbbbbbbbb
+            bbbddddddddccccccdddddddddbbbbbbbbbbbbbbbbbddddddddccccccdddddddddbbbbbbbbbbbbbbbbbddddddddccccccdddddddddbbbbbbbbbbbbbbbbbddddddddccccccdddddddddbbbbbbbbbbbbbb
+            bbbbdddddcccccccccdddddddbbbbbbbbbbbbbbbbbbbdddddcccccccccdddddddbbbbbbbbbbbbbbbbbbbdddddcccccccccdddddddbbbbbbbbbbbbbbbbbbbdddddcccccccccdddddddbbbbbbbbbbbbbbb
+            bbbbbddddddccccccccdddddbbbbbbbbbbbbbbbbbbbbbddddddccccccccdddddbbbbbbbbbbbbbbbbbbbbbddddddccccccccdddddbbbbbbbbbbbbbbbbbbbbbddddddccccccccdddddbbbbbbbbbbbbbbbb
+            bbbbbbddbbcccccccddddddbbbbbbbbbbbbbbbbbbbbbbbddbbcccccccddddddbbbbbbbbbbbbbbbbbbbbbbbddbbcccccccddddddbbbbbbbbbbbbbbbbbbbbbbbddbbcccccccddddddbbbbbbbbbbbbbbbbb
+            bbbbbbbbbbbbccccccddddbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccddddbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccddddbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccddddbbcbbbbbbbbbbbbbbb
+            bbbbbbbbbbcccccccccddbbbcbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccddbbbcbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccddbbbcbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccddbbbcbbbbbbbbbbbbbbb
+            bbbbbbbbbcccccccccccbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbccbbbbbbbbbbbbbbb
+            bbbbbbbcccccccccccbbbbbbccbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbccbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbccbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbccbbbbbbbbbbbbbb
+            bbbbbbbbbcccccccccbbbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbccbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbccbbbbbbbbbbbbbbb
+            bbbbbbbbbcccccccbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbcccccccbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbcccccccbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbcccccccbbbbbbccccbbbbbbbbbbbbbb
+            bbbbbbbbccbccccccccbbccccccbbbbbbbbbbbbbbbbbbbbbccbccccccccbbccccccbbbbbbbbbbbbbbbbbbbbbccbccccccccbbccccccbbbbbbbbbbbbbbbbbbbbbccbccccccccbbccccccbbbbbbbbbbbbb
+            bbbbbbbbbbccccccccccbbbccbbbbbbbbbbbcbbbbbbbbbbbbbccccccccccbbbccbbbbbbbbbbbcbbbbbbbbbbbbbccccccccccbbbccbbbbbbbbbbbcbbbbbbbbbbbbbccccccccccbbbccbbbbbbbbbbbcbbb
+            bbbbbbbbcccccccccccbbccccccbbbbbbbbbcbbbbbbbbbbbcccccccccccbbccccccbbbbbbbbbcbbbbbbbbbbbcccccccccccbbccccccbbbbbbbbbcbbbbbbbbbbbcccccccccccbbccccccbbbbbbbbbcbbb
+            bbbcbbbccccccccccccbccccccccbbbbbbbcccbbbbbcbbbccccccccccccbccccccccbbbbbbbcccbbbbbcbbbccccccccccccbccccccccbbbbbbbcccbbbbbcbbbccccccccccccbccccccccbbbbbbbcccbb
+            bbbccbbbbbccccccccccccccccbbbbbbbbbbccbbbbbccbbbbbccccccccccccccccbbbbbbbbbbccbbbbbccbbbbbccccccccccccccccbbbbbbbbbbccbbbbbccbbbbbccccccccccccccccbbbbbbbbbbccbb
+            bbccbbbbccccccccccccccccccccbbbbbbbccbbbbbccbbbbccccccccccccccccccccbbbbbbbccbbbbbccbbbbccccccccccccccccccccbbbbbbbccbbbbbccbbbbccccccccccccccccccccbbbbbbbccbbb
+            bbbccbbccccccccccccccccccccccbbbbbccccbbbbbccbbccccccccccccccccccccccbbbbbccccbbbbbccbbccccccccccccccccccccccbbbbbccccbbbbbccbbccccccccccccccccccccccbbbbbccccbb
+            bbcccccccccccccccccccccccccbbbbbbbbccccbbbcccccccccccccccccccccccccbbbbbbbbccccbbbcccccccccccccccccccccccccbbbbbbbbccccbbbcccccccccccccccccccccccccbbbbbbbbccccb
+            bbbccccccccccccccccccccccccccbbbbbccccbbbbbccccccccccccccccccccccccccbbbbbccccbbbbbccccccccccccccccccccccccccbbbbbccccbbbbbccccccccccccccccccccccccccbbbbbccccbb
+            bbbcccccccccccccccccccccccccccbbbccccccbbbbcccccccccccccccccccccccccccbbbccccccbbbbcccccccccccccccccccccccccccbbbccccccbbbbcccccccccccccccccccccccccccbbbccccccb
+            bbccccccccccccccccccccccccccbbbbbbccccbbbbccccccccccccccccccccccccccbbbbbbccccbbbbccccccccccccccccccccccccccbbbbbbccccbbbbccccccccccccccccccccccccccbbbbbbccccbb
+            bcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbcccccccb
+            bbcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbcccccccbbcccccccccccccccccccccccccccccbbccccccc
+            bbccccccccccccccccccccccccccccbbccccccccbbccccccccccccccccccccccccccccbbccccccccbbccccccccccccccccccccccccccccbbccccccccbbccccccccccccccccccccccccccccbbcccccccc
+            cccccccccccccccccccccccccccccccbcccccccccccccccccccccccccccccccccccccccbcccccccccccccccccccccccccccccccccccccccbcccccccccccccccccccccccccccccccccccccccbcccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            `)
+        hero.vx = walkingSpeed
+        timer.after(500, function () {
+            hero.vx = 0
+        })
+        story.spriteSayText(hero, "Juhuu! Ich habe Geburtstag!!!")
+        hero.vx = walkingSpeed
+        timer.after(7500, function () {
+            hero.vx = 0
+        })
+        pause(1000)
+        story.spriteSayText(hero, "ABER.....")
+        hero.vx = 0 - walkingSpeed
+        timer.after(500, function () {
+            hero.vx = 0
+        })
+        pause(2000)
+        story.spriteSayText(hero, "Wo sind meine Geschenke???")
+        hero.vx = 0 - walkingSpeed
+        timer.after(500, function () {
+            hero.vx = 0
+        })
+        pause(2000)
+        story.spriteSayText(hero, "Ich muss sie wiederfinden!!!")
+        hero.vx = walkingSpeed
+        timer.after(250, function () {
+            hero.vx = 0
+        })
+        pause(1000)
+        story.spriteSayText(hero, "Vielleicht finde ich dort ein paar Hinweise...")
+        hero.vx = walkingSpeed
+        pause(1000)
+        fadeToBlack()
+        color.pauseUntilFadeDone()
+        startLevel()
+    })
 }
 function init () {
     hero = sprites.create(assets.image`monkey`, SpriteKind.Player)
@@ -1804,9 +1998,10 @@ function init () {
     maxLife = 5
     levelStarted = false
     currentLevelCode = ""
-    levelCode0 = "aa"
-    levelCode1 = "aabb"
-    levelCodeBoss = "aabbcc"
+    levelCode0 = "ha"
+    levelCode1 = "happ"
+    levelCodeBoss = "happyb"
+    levelCodeEnd = "happybday"
     isBossFightStarted = false
     bossAcceleration = 50
     bossVelocity = 35
@@ -1814,6 +2009,8 @@ function init () {
     isBossHit = false
     isBossHitInvisible = false
     snakeSpeed = 20
+    bossSpawnBeeTime = 0
+    bossMaxLifes = 4
     hero.ay = gravity
     hero.setFlag(SpriteFlag.BounceOnWall, false)
     hero.setFlag(SpriteFlag.StayInScreen, true)
@@ -1858,10 +2055,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, oth
         })
     }
 })
-function moveSnake () {
-	
-}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, otherSprite) {
+    otherSprite.ay = 0
     controller.moveSprite(hero, 0, 0)
     otherSprite.setFlag(SpriteFlag.Ghost, true)
     otherSprite.setImage(img`
@@ -1906,12 +2101,34 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile2`, function (sprite, l
     doHitBadTile(sprite)
 })
 sprites.onOverlap(SpriteKind.SnakeKind, SpriteKind.SnakeBumperKind, function (sprite, otherSprite) {
-    if (sprite.vx <= 0) {
-        snake.vx = snakeSpeed
-    } else {
-        snake.vx = 0 - snakeSpeed
+    if (sprite.vx <= 0 && sprite.left <= otherSprite.right) {
+        sprite.vx = snakeSpeed
+    } else if (sprite.vx > 0 && sprite.right >= otherSprite.left) {
+        sprite.vx = 0 - snakeSpeed
     }
 })
+function doBossFight () {
+    if (hero.x < boss.x) {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage12`)
+        } else {
+            boss.setImage(assets.image`myImage11`)
+        }
+    } else {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage13`)
+        } else {
+            boss.setImage(assets.image`myImage8`)
+        }
+    }
+    if (boss.x < boss.width * 0.55) {
+        boss.ax = bossAcceleration
+        boss.vx = bossVelocity
+    } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
+        boss.ax = 0 - bossAcceleration
+        boss.vx = 0 - bossVelocity
+    }
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.LifeKind, function (sprite, otherSprite) {
     if (info.life() < maxLife) {
         info.changeLifeBy(1)
@@ -2004,7 +2221,7 @@ function createMenu () {
         if (selectedIndex == 0) {
             fadeToBlack()
             color.pauseUntilFadeDone()
-            startLevel()
+            introCutscene()
         } else {
             createLevelMenu()
         }
@@ -2013,36 +2230,7 @@ function createMenu () {
 sprites.onOverlap(SpriteKind.Player, SpriteKind.FlowerKind, function (sprite, otherSprite) {
     music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
     sprites.destroy(otherSprite, effects.disintegrate, 50)
-    bee = sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `, SpriteKind.Enemy)
-    animation.runImageAnimation(
-    bee,
-    assets.animation`myAnim`,
-    100,
-    true
-    )
-    beeOffset = 100
-    if (Math.percentChance(50)) {
-        beeOffset = beeOffset * -1
-    }
-    bee.setPosition(hero.x + beeOffset, hero.y - 80)
-    bee.follow(hero, enemySpeed)
+    spawnBee()
 })
 function doJump () {
     if (numberOfJumpRemaining > 0) {
@@ -2083,6 +2271,8 @@ function startLevel () {
         tiles.setCurrentTilemap(tilemap`level8`)
     } else if (currentLevelCode == levelCodeBoss) {
         tiles.setCurrentTilemap(tilemap`level9`)
+    } else if (currentLevelCode == levelCodeEnd) {
+        tiles.setCurrentTilemap(tilemap`level2`)
     } else {
         tiles.setCurrentTilemap(tilemap`level6`)
     }
@@ -2217,11 +2407,11 @@ function startLevel () {
             tiles.setTileAt(value, assets.tile`myTile2`)
         }
     }
-    for (let value of tiles.getTilesByType(assets.tile`start_tile`)) {
-        tiles.setTileAt(value, assets.tile`transparency16`)
+    for (let value2 of tiles.getTilesByType(assets.tile`start_tile`)) {
+        tiles.setTileAt(value2, assets.tile`transparency16`)
     }
-    for (let value of tiles.getTilesByType(assets.tile`end_tile`)) {
-        tiles.setTileAt(value, assets.tile`transparency16`)
+    for (let value3 of tiles.getTilesByType(assets.tile`end_tile`)) {
+        tiles.setTileAt(value3, assets.tile`transparency16`)
         chest = sprites.create(img`
             . . b b b b b b b b b b b b . . 
             . b e 4 4 4 4 4 4 4 4 4 4 e b . 
@@ -2240,10 +2430,10 @@ function startLevel () {
             b b b b b b b b b b b b b b b b 
             . b b . . . . . . . . . . b b . 
             `, SpriteKind.ChestKind)
-        tiles.placeOnTile(chest, value)
+        tiles.placeOnTile(chest, value3)
         chest.z = -1
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile0`)) {
+    for (let value4 of tiles.getTilesByType(assets.tile`myTile0`)) {
         coin = sprites.create(img`
             . . b b b b . . 
             . b 5 5 5 5 b . 
@@ -2254,8 +2444,8 @@ function startLevel () {
             . f d d d d f . 
             . . f f f f . . 
             `, SpriteKind.CoinKind)
-        tiles.placeOnTile(coin, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(coin, value4)
+        tiles.setTileAt(value4, assets.tile`transparency16`)
         animation.runImageAnimation(
         coin,
         [img`
@@ -2317,7 +2507,7 @@ function startLevel () {
         true
         )
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile7`)) {
+    for (let value5 of tiles.getTilesByType(assets.tile`myTile7`)) {
         life = sprites.create(img`
             . . . . . . . f . . . . . . . . 
             . . . . . . f e f . . . . . . . 
@@ -2336,8 +2526,8 @@ function startLevel () {
             . f f b b b b b f f . . . . . . 
             . . . f f f f f . . . . . . . . 
             `, SpriteKind.LifeKind)
-        tiles.placeOnTile(life, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(life, value5)
+        tiles.setTileAt(value5, assets.tile`transparency16`)
         animation.runImageAnimation(
         life,
         [img`
@@ -2379,7 +2569,7 @@ function startLevel () {
         true
         )
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile1`)) {
+    for (let value6 of tiles.getTilesByType(assets.tile`myTile1`)) {
         if (Math.percentChance(50)) {
             flower = sprites.create(img`
                 . . . . . . . . 
@@ -2419,10 +2609,10 @@ function startLevel () {
                 . . 8 8 8 6 . . 
                 `, SpriteKind.FlowerKind)
         }
-        tiles.placeOnTile(flower, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(flower, value6)
+        tiles.setTileAt(value6, assets.tile`transparency16`)
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile8`)) {
+    for (let value7 of tiles.getTilesByType(assets.tile`myTile8`)) {
         snake = sprites.create(img`
             . . . . c c c c c c . . . . . . 
             . . . c 6 7 7 7 7 6 c . . . . . 
@@ -2442,12 +2632,13 @@ function startLevel () {
             . . c c c c c c c c c f . . . . 
             `, SpriteKind.SnakeKind)
         sprites.setDataNumber(snake, "life", 2)
-        tiles.placeOnTile(snake, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(snake, value7)
+        tiles.setTileAt(value7, assets.tile`transparency16`)
         createSnakeAnimation(snake)
         snake.vx = 0 - snakeSpeed
+        snake.ay = gravity
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile10`)) {
+    for (let value8 of tiles.getTilesByType(assets.tile`myTile10`)) {
         snakeBumper = sprites.create(img`
             f f f f f f f f f f f f f f f f 
             f f f f f f f f f f f f f f f f 
@@ -2466,14 +2657,14 @@ function startLevel () {
             f f f f f f f f f f f f f f f f 
             f f f f f f f f f f f f f f f f 
             `, SpriteKind.SnakeBumperKind)
-        tiles.placeOnTile(snakeBumper, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(snakeBumper, value8)
+        tiles.setTileAt(value8, assets.tile`transparency16`)
         snakeBumper.setFlag(SpriteFlag.Invisible, true)
     }
-    for (let value of tiles.getTilesByType(assets.tile`myTile9`)) {
+    for (let value9 of tiles.getTilesByType(assets.tile`myTile9`)) {
         boss = sprites.create(assets.image`myImage11`, SpriteKind.BossKind)
-        tiles.placeOnTile(boss, value)
-        tiles.setTileAt(value, assets.tile`transparency16`)
+        tiles.placeOnTile(boss, value9)
+        tiles.setTileAt(value9, assets.tile`transparency16`)
         animation.runMovementAnimation(
         boss,
         animation.animationPresets(animation.bobbing),
@@ -2482,7 +2673,7 @@ function startLevel () {
         )
         timer.after(3000, function () {
             animation.stopAnimation(animation.AnimationTypes.All, boss)
-            bossStatusBar = statusbars.create(60, 8, StatusBarKind.Health)
+            bossStatusBar = statusbars.create(60, 8, StatusBarKind.BossHealth)
             bossStatusBar.setBarBorder(1, 15)
             bossStatusBar.setColor(5, 0, 4)
             bossStatusBar.positionDirection(CollisionDirection.Bottom)
@@ -2491,15 +2682,53 @@ function startLevel () {
             bossStatusBar.setStatusBarFlag(StatusBarFlag.SmoothTransition, true)
             isBossFightStarted = true
             boss.ax = 0 - bossAcceleration
+            bossSpawnBeeTime = game.runtime()
         })
     }
     levelStarted = true
     hero.setFlag(SpriteFlag.Invisible, false)
-    controller.moveSprite(hero, walkingSpeed, 0)
     hero.vx = walkingSpeed
     timer.after(150, function () {
         hero.vx = 0
+        controller.moveSprite(hero, walkingSpeed, 0)
+        if (currentLevelCode == levelCodeBoss) {
+            hero.sayText("WAAAAH!", 2000, true)
+        } else {
+            hero.sayText("Los gehts!", 2000, true)
+        }
     })
+}
+function spawnBee () {
+    bee = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.Enemy)
+    animation.runImageAnimation(
+    bee,
+    assets.animation`myAnim`,
+    100,
+    true
+    )
+    beeOffset = randint(0, 100)
+    if (Math.percentChance(50)) {
+        beeOffset = beeOffset * -1
+    }
+    bee.setPosition(Math.constrain(hero.x + beeOffset, 0, scene.screenWidth()), Math.constrain(hero.y - 80, bee.height, scene.screenHeight()))
+    bee.follow(hero, enemySpeed)
 }
 function fadeToWhite () {
     color.startFade(color.originalPalette, color.White, 500)
@@ -2525,22 +2754,22 @@ function fadeToBlack () {
     color.pauseUntilFadeDone()
     color.startFade(color.Black, color.originalPalette, 500)
 }
+let beeOffset = 0
+let bee: Sprite = null
 let snakeBumper: Sprite = null
+let snake: Sprite = null
 let flower: Sprite = null
 let life: Sprite = null
 let coin: Sprite = null
-let chest: Sprite = null
-let beeOffset = 0
-let bee: Sprite = null
 let mainMenu: miniMenu.MenuSprite = null
-let snake: Sprite = null
 let scroll: Sprite = null
+let bossSpawnBeeTime = 0
 let snakeSpeed = 0
 let isBossHitInvisible = false
+let isBossFightStarted = false
 let maxLife = 0
 let isPlayerHitInvisible = false
 let enemySpeed = 0
-let walkingSpeed = 0
 let isIdleAnimation = false
 let idleTime = 0
 let isIdle = false
@@ -2549,39 +2778,49 @@ let isWalking = false
 let isFacingLeft = false
 let wallJumpHeight = 0
 let jumpHeight = 0
-let gravity = 0
-let bossVelocity = 0
-let bossAcceleration = 0
-let isBossFightStarted = false
-let boss: Sprite = null
+let walkingSpeed = 0
+let bossMaxLifes = 0
 let bossLife = 0
 let bossStatusBar: StatusBarSprite = null
 let isBossHit = false
 let isPlayerHit = false
-let hero: Sprite = null
+let bossVelocity = 0
+let bossAcceleration = 0
 let levelStarted = false
+let levelCodeEnd = ""
 let levelCodeBoss = ""
 let levelCode1 = ""
 let levelCode0 = ""
 let currentLevelCode = ""
 let clueScreen: Sprite = null
+let gravity = 0
+let hero: Sprite = null
+let chest: Sprite = null
+let boss: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
 let mainMenuButtonASprite: Sprite = null
 let titleScreenSprite: Sprite = null
 init()
-startLevel()
+createTitleScreen()
 game.onUpdate(function () {
     if (levelStarted) {
-        if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= scene.screenWidth())) {
+        if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= tiles.tilemapColumns() * tiles.tileWidth())) {
             hero.vy = 0
             hero.ay = 0
             numberOfJumpRemaining = numberOfJumps
         } else {
             hero.ay = gravity
         }
-        moveSnake()
-        moveBoss()
+        if (isBossFightStarted && currentLevelCode == levelCodeBoss) {
+            doBossFight()
+            if (game.runtime() - bossSpawnBeeTime > 5000) {
+                bossSpawnBeeTime = game.runtime()
+                if (Math.percentChance(10)) {
+                    spawnBee()
+                }
+            }
+        }
     }
 })
 game.onUpdateInterval(50, function () {
