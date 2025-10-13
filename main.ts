@@ -16,6 +16,7 @@ namespace SpriteKind {
     export const SnakeKind = SpriteKind.create()
     export const SnakeBumperKind = SpriteKind.create()
     export const GoalKind = SpriteKind.create()
+    export const StepKind = SpriteKind.create()
 }
 namespace StatusBarKind {
     export const BossHealth = StatusBarKind.create()
@@ -91,6 +92,15 @@ function doHitBadTile (sprite: Sprite) {
         game.gameOver(false)
     }
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.StepKind, function (sprite, otherSprite) {
+    sprites.destroyAllSpritesOfKind(SpriteKind.StepKind)
+    story.startCutscene(function () {
+        story.setPagePauseLength(1000, 1000)
+        story.setSoundEnabled(true)
+        story.spriteSayText(hero, "Ufff! So viele Stufen....")
+        story.spriteSayText(hero, "...ich muss noch höher!")
+    })
+})
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (sprite.isHittingTile(CollisionDirection.Bottom)) {
         numberOfJumpRemaining = numberOfJumps
@@ -101,7 +111,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, othe
         story.setPagePauseLength(1000, 1000)
         story.setSoundEnabled(true)
         controller.moveSprite(hero, 0, 0)
-        story.spriteSayText(hero, "Juhuuuu!")
+        story.spriteSayText(hero, "JUHUUUU!!!")
         pause(2000)
         fadeToBlack()
         timer.after(250, function () {
@@ -2543,9 +2553,6 @@ function startLevel () {
         sprites.setDataNumber(snake, "life", 2)
         tiles.placeOnTile(snake, value7)
         tiles.setTileAt(value7, assets.tile`transparency16`)
-        createSnakeAnimation(snake)
-        snake.vx = 0 - snakeSpeed
-        snake.ay = gravity
     }
     for (let value8 of tiles.getTilesByType(assets.tile`myTile10`)) {
         snakeBumper = sprites.create(img`
@@ -2599,6 +2606,12 @@ function startLevel () {
         tiles.placeOnTile(goal, value5)
         tiles.setTileAt(value5, assets.tile`transparency16`)
         goal.startEffect(effects.confetti)
+    }
+    for (let value5 of tiles.getTilesByType(assets.tile`myTile12`)) {
+        steps = sprites.create(assets.image`myImage9`, SpriteKind.StepKind)
+        tiles.placeOnTile(steps, value5)
+        tiles.setTileAt(value5, assets.tile`transparency16`)
+        steps.setFlag(SpriteFlag.Invisible, true)
     }
     levelStarted = true
     hero.setFlag(SpriteFlag.Invisible, false)
@@ -2675,6 +2688,7 @@ function fadeToBlack () {
 }
 let beeOffset = 0
 let bee: Sprite = null
+let steps: Sprite = null
 let goal: Sprite = null
 let snakeBumper: Sprite = null
 let snake: Sprite = null
@@ -2716,9 +2730,9 @@ let clueScreen: Sprite = null
 let gravity = 0
 let chest: Sprite = null
 let boss: Sprite = null
-let hero: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
+let hero: Sprite = null
 let mainMenuButtonASprite: Sprite = null
 let titleScreenSprite: Sprite = null
 init()

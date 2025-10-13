@@ -598,6 +598,25 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 .5ffffffffffffffffffffffffffffffffffff5.
 .55555555555555555555555555555555555555.
 `;
+            case "image12":
+            case "myImage9":return img`
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 f f f f 5 5 5 5 5 5 5 5 5 5 5 
+5 f 5 5 5 f f f f f 5 5 f f f f 
+5 f f f 5 5 5 f 5 5 5 5 f 5 5 f 
+5 5 5 f f 5 5 f 5 f f 5 f f 5 f 
+5 5 5 5 f 5 5 f 5 f 5 5 f f f f 
+5 5 5 5 f 5 5 f 5 f f 5 5 f 5 5 
+5 f 5 5 f 5 5 f 5 f 5 5 5 f 5 5 
+5 5 f f 5 5 5 f 5 f f f 5 f 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 
+`;
         }
         return null;
     })
