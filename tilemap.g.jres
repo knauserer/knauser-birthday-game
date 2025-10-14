@@ -164,28 +164,6 @@
         ],
         "displayName": "level6"
     },
-    "level9": {
-        "id": "level9",
-        "mimeType": "application/mkcd-tilemap",
-        "data": "MTAwYTAwMGEwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA0MDAwMDAwMGEwZDBjMDAwMDBhMDAwMDAwMDAwMDA2MDgwODA3MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwYTAxMDAwMDBiMGQwMDAwMDkwYTAyMDMwMzAzMDMwMzAzMDMwMzA1MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAyMDIyMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjIyMjIyMjIyMg==",
-        "tileset": [
-            "myTiles.transparency16",
-            "myTiles.tile1",
-            "sprites.builtin.forestTiles24",
-            "sprites.builtin.forestTiles25",
-            "myTiles.tile13",
-            "sprites.builtin.forestTiles26",
-            "sprites.builtin.forestTiles27",
-            "sprites.builtin.forestTiles29",
-            "sprites.builtin.forestTiles28",
-            "myTiles.tile12",
-            "myTiles.tile14",
-            "myTiles.tile9",
-            "myTiles.tile10",
-            "grafxkid.springGrass"
-        ],
-        "displayName": "level9"
-    },
     "level2": {
         "id": "level2",
         "mimeType": "application/mkcd-tilemap",
@@ -296,6 +274,28 @@
             "sprites.builtin.forestTiles8"
         ],
         "displayName": "level8"
+    },
+    "level9": {
+        "id": "level9",
+        "mimeType": "application/mkcd-tilemap",
+        "data": "MTAwYTAwMGEwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA0MDAwMDAwMGEwZDBjMDAwYTAwMDAwMDAwMDAwMDA2MDgwNzAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwYTAxMDAwMDBiMGQwMDAwMDkwYTAyMDMwMzAzMDMwMzAzMDMwMzA1MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAyMDIyMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjIyMjIyMjIyMg==",
+        "tileset": [
+            "myTiles.transparency16",
+            "myTiles.tile1",
+            "sprites.builtin.forestTiles24",
+            "sprites.builtin.forestTiles25",
+            "myTiles.tile13",
+            "sprites.builtin.forestTiles26",
+            "sprites.builtin.forestTiles27",
+            "sprites.builtin.forestTiles29",
+            "sprites.builtin.forestTiles28",
+            "myTiles.tile12",
+            "myTiles.tile14",
+            "myTiles.tile9",
+            "myTiles.tile10",
+            "grafxkid.springGrass"
+        ],
+        "displayName": "level9"
     },
     "*": {
         "mimeType": "image/x-mkcd-f4",

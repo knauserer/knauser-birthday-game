@@ -94,19 +94,6 @@ namespace myTiles {
 ................................................................
 2222222222222222................................................
 `, [myTiles.transparency16,sprites.builtin.forestTiles22,sprites.builtin.forestTiles21,sprites.builtin.forestTiles23,myTiles.tile1,myTiles.tile2,myTiles.tile4,sprites.builtin.forestTiles0,myTiles.tile5,sprites.builtin.forestTiles3,myTiles.tile7,sprites.swamp.swampTile2,sprites.swamp.swampTile0,sprites.swamp.swampTile1,myTiles.tile8,myTiles.tile9,myTiles.tile10,myTiles.tile11,grafxkid.springBush,grafxkid.springGrass,grafxkid.springTree3Alt,grafxkid.springTree4Alt,grafxkid.springTree1Alt,grafxkid.springTree2Alt], TileScale.Sixteen);
-            case "level9":
-            case "level9":return tiles.createTilemap(hex`0a000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000a0d0c00000a000000000006080807000000000000000000000000000a0100000b0d0000090a02030303030303030305`, img`
-. . . . . . . . . . 
-. . . . . . . . . . 
-. . . . . . . . . . 
-. . . . . . . . . . 
-. . . . . . . . . . 
-. . . . . . . . . . 
-. . . 2 2 2 2 . . . 
-. . . . . . . . . . 
-. . . . . . . . . . 
-2 2 2 2 2 2 2 2 2 2 
-`, [myTiles.transparency16,myTiles.tile1,sprites.builtin.forestTiles24,sprites.builtin.forestTiles25,myTiles.tile13,sprites.builtin.forestTiles26,sprites.builtin.forestTiles27,sprites.builtin.forestTiles29,sprites.builtin.forestTiles28,myTiles.tile12,myTiles.tile14,myTiles.tile9,myTiles.tile10,grafxkid.springGrass], TileScale.Sixteen);
             case "level2":
             case "level2":return tiles.createTilemap(hex`10003400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000d0b0c0d00000000050606060606060606060606040000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000d03000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000003000000000000000000000000000000000000000000000000000000000d0000000000000000000000000000000300000000000000000000000000000000030f0f0f0f0f0f0f0f0f0f0f0f0f0f000003000000000000000000000000000000000300000000000000000000000000000000030a000000000000000000000000000000030000000000000000000000000000000003000000000000000000000000000000000300000000000000000000000000000000030000000000000000000000000000000003000000000000000000000000000000000300000000000000000000000000000000030000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000e03000000000000000000000000000003000000000000000000000000000d0300000000000000000000000000000300000000000000000000000000000300000000000000000000000000000300000000000000000000000000000300000000000000000000000000000300000000000000000a01000d090d0300000000000000000002020202020408080808080808080808`, img`
 ................
@@ -266,6 +253,19 @@ namespace myTiles {
 ..........222222222.....22222....22...2....2....2222...2..2..2...2......2
 2222222222222222222.....22222....22...2....2....2222...2..2..2...2......2
 `, [myTiles.transparency16,myTiles.tile1,myTiles.tile2,myTiles.tile7,myTiles.tile12,myTiles.tile14,sprites.builtin.forestTiles22,sprites.builtin.forestTiles9,sprites.builtin.forestTiles11,sprites.builtin.forestTiles5,sprites.builtin.forestTiles1,sprites.builtin.forestTiles2,sprites.builtin.forestTiles3,sprites.builtin.forestTiles7,sprites.builtin.forestTiles6,sprites.builtin.forestTiles10,sprites.builtin.forestTiles4,myTiles.tile11,sprites.builtin.forestTiles13,sprites.builtin.forestTiles15,sprites.builtin.forestTiles20,sprites.builtin.forestTiles25,sprites.builtin.forestTiles26,sprites.builtin.forestTiles12,sprites.builtin.forestTiles0,myTiles.tile4,myTiles.tile5,myTiles.tile8,myTiles.tile9,myTiles.tile10,sprites.builtin.forestTiles21,sprites.builtin.forestTiles23,sprites.swamp.swampTile0,sprites.swamp.swampTile1,sprites.swamp.swampTile3,grafxkid.springBush,grafxkid.springGrass,grafxkid.springTree3Alt,grafxkid.springTree4Alt,grafxkid.springTree1Alt,grafxkid.springTree2Alt,sprites.builtin.forestTiles8], TileScale.Sixteen);
+            case "level9":
+            case "level9":return tiles.createTilemap(hex`0a000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000a0d0c000a00000000000006080700000000000000000000000000000a0100000b0d0000090a02030303030303030305`, img`
+. . . . . . . . . . 
+. . . . . . . . . . 
+. . . . . . . . . . 
+. . . . . . . . . . 
+. . . . . . . . . . 
+. . . . . . . . . . 
+. . . 2 2 2 . . . . 
+. . . . . . . . . . 
+. . . . . . . . . . 
+2 2 2 2 2 2 2 2 2 2 
+`, [myTiles.transparency16,myTiles.tile1,sprites.builtin.forestTiles24,sprites.builtin.forestTiles25,myTiles.tile13,sprites.builtin.forestTiles26,sprites.builtin.forestTiles27,sprites.builtin.forestTiles29,sprites.builtin.forestTiles28,myTiles.tile12,myTiles.tile14,myTiles.tile9,myTiles.tile10,grafxkid.springGrass], TileScale.Sixteen);
         }
         return null;
     })

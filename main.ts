@@ -149,6 +149,9 @@ statusbars.onZero(StatusBarKind.BossHealth, function (status) {
     chest.ay = gravity
     chest.setBounceOnWall(false)
 })
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    story.clearAllText()
+})
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
     doHitBadTile(sprite)
 })
