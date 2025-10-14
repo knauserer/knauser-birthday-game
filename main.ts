@@ -279,7 +279,7 @@ function showClue () {
     } else if (currentLevelCode == levelCode0) {
         game.showLongText("HINWEIS: Geh zu den HASEN und suche nach dem Code für das nächste Level!", DialogLayout.Center)
     } else if (currentLevelCode == levelCode1) {
-        game.showLongText("HINWEIS: Gehe zum WEIHNACHTS- BERG und suche nach dem Code für das nächste Level!", DialogLayout.Center)
+        game.showLongText("HINWEIS: Gehe zum WEIH- NACHTSBERG und suche nach dem Code für das nächste Level!", DialogLayout.Center)
     } else if (currentLevelCode == levelCodeBoss) {
         game.showLongText("HINWEIS: Geh in den KELLER und suche nach dem Code für das nächste Level!", DialogLayout.Center)
     }
@@ -1921,7 +1921,7 @@ function init () {
     isPlayerHitInvisible = false
     maxLife = 5
     levelStarted = false
-    currentLevelCode = "happyb"
+    currentLevelCode = "happ"
     levelCode0 = "ha"
     levelCode1 = "happ"
     levelCodeBoss = "happyb"
@@ -1944,13 +1944,14 @@ function init () {
     createAnimations()
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, otherSprite) {
-    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
+    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.bottom < otherSprite.bottom + 0) {
         sprites.changeDataNumberBy(otherSprite, "life", -1)
         if (sprites.readDataNumber(otherSprite, "life") <= 0) {
             info.changeScoreBy(3)
             sprites.destroy(otherSprite, effects.disintegrate, 50)
         }
         sprite.vy = -150
+        sprite.y += sprite.bottom - otherSprite.bottom - 2
         music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
     } else if (!(isPlayerHit)) {
         isPlayerHit = true
@@ -2586,6 +2587,7 @@ function startLevel () {
         tiles.placeOnTile(snake, value7)
         tiles.setTileAt(value7, assets.tile`transparency16`)
         snake.vx = 0 - snakeSpeed
+        snake.ay = gravity
         createSnakeAnimation(snake)
     }
     for (let value8 of tiles.getTilesByType(assets.tile`myTile10`)) {
