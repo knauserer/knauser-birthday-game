@@ -25,6 +25,69 @@ namespace StatusBarKind {
 function createTitleScreen () {
     fadeToWhite()
     titleScreenSprite = sprites.create(assets.image`myImage0`, SpriteKind.TitleScreen)
+    mainMenuButtonASprite = sprites.create(img`
+        . . . . 6 6 6 6 6 6 6 . . . . 
+        . . 6 6 7 7 7 7 7 7 7 6 6 . . 
+        . 6 6 7 7 7 8 8 8 7 7 7 6 6 . 
+        . 6 7 7 7 8 8 7 8 8 7 7 7 6 . 
+        . c 7 7 8 8 8 8 8 8 8 7 7 c . 
+        . c 9 7 8 7 7 7 7 7 8 7 9 c . 
+        . c 9 9 7 7 7 7 7 7 7 9 9 c . 
+        . c 6 6 9 9 9 9 9 9 9 6 6 c . 
+        c c 6 6 6 6 6 6 6 6 6 6 6 c c 
+        c d c c 6 6 6 6 6 6 6 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `, SpriteKind.MenuButtonKind)
+    mainMenuButtonASprite.setPosition(scene.screenWidth() * 0.9, scene.screenHeight() * 0.9)
+    animation.runImageAnimation(
+    mainMenuButtonASprite,
+    [img`
+        . . . . 6 6 6 6 6 6 6 . . . . 
+        . . 6 6 7 7 7 7 7 7 7 6 6 . . 
+        . 6 6 7 7 7 8 8 8 7 7 7 6 6 . 
+        . 6 7 7 7 8 8 7 8 8 7 7 7 6 . 
+        . c 7 7 8 8 8 8 8 8 8 7 7 c . 
+        . c 9 7 8 7 7 7 7 7 8 7 9 c . 
+        . c 9 9 7 7 7 7 7 7 7 9 9 c . 
+        . c 6 6 9 9 9 9 9 9 9 6 6 c . 
+        c c 6 6 6 6 6 6 6 6 6 6 6 c c 
+        c d c c 6 6 6 6 6 6 6 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `,img`
+        . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . 
+        . . . . 8 8 8 8 8 8 8 . . . . 
+        . . 8 8 7 7 7 7 7 7 7 8 8 . . 
+        . 8 8 7 6 6 8 8 8 6 6 7 8 8 . 
+        . 8 7 6 6 8 8 7 8 8 6 6 7 8 . 
+        . 8 6 6 8 8 8 8 8 8 8 6 6 8 . 
+        . c 8 6 8 6 7 7 7 6 8 6 8 c . 
+        c c 8 8 6 6 6 6 6 6 6 8 8 c c 
+        c d c c 8 8 8 8 8 8 8 c c d c 
+        c d d d c c c c c c c d d d c 
+        c c b d d d d d d d d d b c c 
+        c c c c c b b b b b c c c c c 
+        c c b b b b b b b b b b b c c 
+        . c c b b b b b b b b b c c . 
+        . . . c c c c c c c c c . . . 
+        `],
+    500,
+    true
+    )
+    pauseUntil(() => controller.A.isPressed())
+    sprites.destroyAllSpritesOfKind(SpriteKind.MenuButtonKind)
+    music.play(music.melodyPlayable(music.magicWand), music.PlaybackMode.UntilDone)
+    createMenu()
 }
 function doHitBadTile (sprite: Sprite) {
     if (sprite.isHittingTile(CollisionDirection.Bottom)) {
@@ -456,7 +519,9 @@ function introCutscene2 () {
             hero.vx = 0
         })
         pause(1500)
-        story.spriteSayText(hero, "Juhuu! Ich habe Geburtstag!!!")
+        story.spriteSayText(hero, "Juhuu!")
+        pause(500)
+        story.spriteSayText(hero, "Ich habe Geburtstag!!!")
         hero.vx = walkingSpeed
         timer.after(7500, function () {
             hero.vx = 0
@@ -467,17 +532,25 @@ function introCutscene2 () {
         timer.after(500, function () {
             hero.vx = 0
         })
-        pause(2000)
+        pause(1000)
         story.spriteSayText(hero, "Wo sind meine Geschenke???")
         hero.vx = 0 - walkingSpeed
         timer.after(500, function () {
             hero.vx = 0
         })
-        pause(2000)
+        pause(1000)
         story.spriteSayText(hero, "Ich muss sie wiederfinden!!!")
         hero.vx = walkingSpeed
         timer.after(250, function () {
             hero.vx = 0
+        })
+        pause(1000)
+        story.spriteSayText(hero, "Vielleicht finde ich da vorne ein paar Hinweise...")
+        hero.vx = walkingSpeed
+        pause(1000)
+        fadeToBlack()
+        timer.after(250, function () {
+            startLevel()
         })
     })
 }
@@ -1495,9 +1568,12 @@ function outroCutscene () {
         story.setPagePauseLength(1000, 1000)
         story.setSoundEnabled(true)
         controller.moveSprite(hero, 0, 0)
+        story.spriteSayText(hero, "Puhhhh!")
+        pause(500)
+        story.spriteSayText(hero, "So eine grimmige Biene :-(")
         pause(1000)
-        story.spriteSayText(hero, "Endlich!...")
-        pause(1000)
+        story.spriteSayText(hero, "Aber endlich!...")
+        pause(500)
         story.spriteSayText(hero, "Ich habe alle Hinweise gefunden!")
         pause(500)
         story.spriteSayText(hero, ":-)")
@@ -1919,9 +1995,9 @@ function init () {
     enemySpeed = 70
     isPlayerHit = false
     isPlayerHitInvisible = false
-    maxLife = 5
+    maxLife = 10
     levelStarted = false
-    currentLevelCode = "happ"
+    currentLevelCode = ""
     levelCode0 = "ha"
     levelCode1 = "happ"
     levelCodeBoss = "happyb"
@@ -1951,7 +2027,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, oth
             sprites.destroy(otherSprite, effects.disintegrate, 50)
         }
         sprite.vy = -150
-        sprite.y += sprite.bottom - otherSprite.bottom - 2
+        sprite.y += sprite.bottom - otherSprite.bottom - 0
         music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
     } else if (!(isPlayerHit)) {
         isPlayerHit = true
@@ -2146,7 +2222,7 @@ function createMenu () {
         if (selectedIndex == 0) {
             fadeToBlack()
             color.pauseUntilFadeDone()
-            outroCutscene()
+            introCutscene2()
         } else {
             createLevelMenu()
         }
@@ -2646,6 +2722,7 @@ function startLevel () {
             for (let value10 of sprites.allOfKind(SpriteKind.SnakeKind)) {
                 value10.vx = 0
             }
+            controller.moveSprite(hero, 0, 0)
             hero.sayText("WAAAAH!", 2000, true)
             pause(2000)
             startBossFight()
@@ -2745,7 +2822,6 @@ let bossLife = 0
 let bossStatusBar: StatusBarSprite = null
 let isBossHit = false
 let isPlayerHit = false
-let mainMenuButtonASprite: Sprite = null
 let endScreenSprite: Sprite = null
 let bossVelocity = 0
 let bossAcceleration = 0
@@ -2764,9 +2840,10 @@ let goal: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
 let hero: Sprite = null
+let mainMenuButtonASprite: Sprite = null
 let titleScreenSprite: Sprite = null
 init()
-startLevel()
+createTitleScreen()
 game.onUpdate(function () {
     if (levelStarted) {
         if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= tiles.tilemapColumns() * tiles.tileWidth())) {
