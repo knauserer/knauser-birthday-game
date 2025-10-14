@@ -2183,6 +2183,7 @@ function doJump () {
 }
 function startBossFight () {
     story.startCutscene(function () {
+        controller.moveSprite(hero, 0, 0)
         pause(1000)
         story.spriteSayText(boss, "HEHEHEH!")
         story.spriteSayText(boss, "Die Geschenke findest du nie!")
@@ -2350,18 +2351,18 @@ function startLevel () {
         `)
     scene.cameraFollowSprite(hero)
     tiles.placeOnRandomTile(hero, assets.tile`start_tile`)
-    for (let value of tiles.getTilesByType(assets.tile`myTile3`)) {
+    for (let value3 of tiles.getTilesByType(assets.tile`myTile3`)) {
         if (Math.percentChance(50)) {
-            tiles.setTileAt(value, assets.tile`myTile`)
+            tiles.setTileAt(value3, assets.tile`myTile`)
         } else {
-            tiles.setTileAt(value, assets.tile`myTile2`)
+            tiles.setTileAt(value3, assets.tile`myTile2`)
         }
     }
     for (let value22 of tiles.getTilesByType(assets.tile`start_tile`)) {
         tiles.setTileAt(value22, assets.tile`transparency16`)
     }
-    for (let value3 of tiles.getTilesByType(assets.tile`end_tile`)) {
-        tiles.setTileAt(value3, assets.tile`transparency16`)
+    for (let value32 of tiles.getTilesByType(assets.tile`end_tile`)) {
+        tiles.setTileAt(value32, assets.tile`transparency16`)
         chest = sprites.create(img`
             . . b b b b b b b b b b b b . . 
             . b e 4 4 4 4 4 4 4 4 4 4 e b . 
@@ -2380,7 +2381,7 @@ function startLevel () {
             b b b b b b b b b b b b b b b b 
             . b b . . . . . . . . . . b b . 
             `, SpriteKind.ChestKind)
-        tiles.placeOnTile(chest, value3)
+        tiles.placeOnTile(chest, value32)
         chest.z = -1
     }
     for (let value4 of tiles.getTilesByType(assets.tile`myTile0`)) {
@@ -2621,16 +2622,16 @@ function startLevel () {
         true
         )
     }
-    for (let value5 of tiles.getTilesByType(assets.tile`myTile11`)) {
+    for (let value52 of tiles.getTilesByType(assets.tile`myTile11`)) {
         goal = sprites.create(assets.image`myImage7`, SpriteKind.GoalKind)
-        tiles.placeOnTile(goal, value5)
-        tiles.setTileAt(value5, assets.tile`transparency16`)
+        tiles.placeOnTile(goal, value52)
+        tiles.setTileAt(value52, assets.tile`transparency16`)
         goal.startEffect(effects.confetti)
     }
-    for (let value5 of tiles.getTilesByType(assets.tile`myTile12`)) {
+    for (let value53 of tiles.getTilesByType(assets.tile`myTile12`)) {
         steps = sprites.create(assets.image`myImage9`, SpriteKind.StepKind)
-        tiles.placeOnTile(steps, value5)
-        tiles.setTileAt(value5, assets.tile`transparency16`)
+        tiles.placeOnTile(steps, value53)
+        tiles.setTileAt(value53, assets.tile`transparency16`)
         steps.setFlag(SpriteFlag.Invisible, true)
     }
     levelStarted = true
@@ -2640,9 +2641,8 @@ function startLevel () {
         hero.vx = 0
         controller.moveSprite(hero, walkingSpeed, 0)
         if (currentLevelCode == levelCodeBoss) {
-            controller.moveSprite(hero, 0, 0)
-            for (let value of sprites.allOfKind(SpriteKind.SnakeKind)) {
-                value.vx = 0
+            for (let value10 of sprites.allOfKind(SpriteKind.SnakeKind)) {
+                value10.vx = 0
             }
             hero.sayText("WAAAAH!", 2000, true)
             pause(2000)
