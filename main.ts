@@ -121,6 +121,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, othe
 })
 statusbars.onZero(StatusBarKind.BossHealth, function (status) {
     sprites.destroy(boss, effects.disintegrate, 50)
+    sprites.destroy(bossStatusBar)
     chest = sprites.create(img`
         . . b b b b b b b b b b b b . . 
         . b e 4 4 4 4 4 4 4 4 4 4 e b . 
@@ -2006,8 +2007,8 @@ function init () {
     levelCodeBoss = "happyb"
     levelCodeEnd = "happybday"
     isBossFightStarted = false
-    bossAcceleration = 50
-    bossVelocity = 35
+    bossAcceleration = 40
+    bossVelocity = 25
     bossLife = 100
     isBossHit = false
     isBossHitInvisible = false
@@ -2822,7 +2823,6 @@ let wallJumpHeight = 0
 let jumpHeight = 0
 let bossMaxLifes = 0
 let bossLife = 0
-let bossStatusBar: StatusBarSprite = null
 let isBossHit = false
 let isPlayerHit = false
 let endScreenSprite: Sprite = null
@@ -2838,6 +2838,7 @@ let currentLevelCode = ""
 let clueScreen: Sprite = null
 let gravity = 0
 let chest: Sprite = null
+let bossStatusBar: StatusBarSprite = null
 let boss: Sprite = null
 let goal: Sprite = null
 let numberOfJumps = 0
