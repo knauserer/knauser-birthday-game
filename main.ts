@@ -119,6 +119,11 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, othe
         createEndScreen()
     })
 })
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (levelStarted) {
+        doJump()
+    }
+})
 statusbars.onZero(StatusBarKind.BossHealth, function (status) {
     sprites.destroy(boss, effects.disintegrate, 50)
     sprites.destroy(bossStatusBar)
@@ -149,9 +154,6 @@ statusbars.onZero(StatusBarKind.BossHealth, function (status) {
     chest.z = -1
     chest.ay = gravity
     chest.setBounceOnWall(false)
-})
-controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    story.clearAllText()
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
     doHitBadTile(sprite)
@@ -558,11 +560,6 @@ function introCutscene2 () {
         })
     })
 }
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (levelStarted) {
-        doJump()
-    }
-})
 function createAnimations () {
     characterAnimations.loopFrames(
     hero,
@@ -2769,6 +2766,9 @@ function spawnBee () {
     bee.setPosition(Math.constrain(hero.x + beeOffset, 0, scene.screenWidth()), Math.constrain(hero.y - 80, bee.height, scene.screenHeight()))
     bee.follow(hero, enemySpeed)
 }
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    story.clearAllText()
+})
 function fadeToWhite () {
     color.startFade(color.originalPalette, color.White, 500)
     color.pauseUntilFadeDone()
@@ -2828,7 +2828,6 @@ let isPlayerHit = false
 let endScreenSprite: Sprite = null
 let bossVelocity = 0
 let bossAcceleration = 0
-let levelStarted = false
 let walkingSpeed = 0
 let levelCodeEnd = ""
 let levelCodeBoss = ""
@@ -2840,6 +2839,7 @@ let gravity = 0
 let chest: Sprite = null
 let bossStatusBar: StatusBarSprite = null
 let boss: Sprite = null
+let levelStarted = false
 let goal: Sprite = null
 let numberOfJumps = 0
 let numberOfJumpRemaining = 0
