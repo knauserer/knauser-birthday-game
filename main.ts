@@ -89,73 +89,58 @@ function createTitleScreen () {
     music.play(music.melodyPlayable(music.magicWand), music.PlaybackMode.UntilDone)
     createMenu()
 }
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
+    doHitBadTile(sprite)
+})
 function doHitBadTile (sprite: Sprite) {
     if (sprite.isHittingTile(CollisionDirection.Bottom)) {
         game.gameOver(false)
     }
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.StepKind, function (sprite, otherSprite) {
-    sprites.destroyAllSpritesOfKind(SpriteKind.StepKind)
-    story.startCutscene(function () {
-        story.setPagePauseLength(1000, 1000)
-        story.setSoundEnabled(true)
-        story.spriteSayText(hero, "Ufff! So viele Stufen....")
-        story.spriteSayText(hero, "...ich muss noch höher!")
-    })
-})
-scene.onHitWall(SpriteKind.Player, function (sprite, location) {
-    if (sprite.isHittingTile(CollisionDirection.Bottom)) {
-        numberOfJumpRemaining = numberOfJumps
-    }
-})
-sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, otherSprite) {
-    story.startCutscene(function () {
-        story.setPagePauseLength(1000, 1000)
-        story.setSoundEnabled(true)
-        controller.moveSprite(hero, 0, 0)
-        story.spriteSayText(hero, "JUHUUUU!!!")
-        pause(1000)
-        effects.clearParticles(goal)
-        createEndScreen()
-    })
-})
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (levelStarted) {
-        doJump()
-    }
-})
-statusbars.onZero(StatusBarKind.BossHealth, function (status) {
-    sprites.destroy(boss, effects.disintegrate, 50)
-    sprites.destroy(bossStatusBar)
-    chest = sprites.create(img`
-        . . b b b b b b b b b b b b . . 
-        . b e 4 4 4 4 4 4 4 4 4 4 e b . 
-        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
-        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, otherSprite) {
+    isLevelFinished = true
+    otherSprite.ay = 0
+    controller.moveSprite(hero, 0, 0)
+    otherSprite.setFlag(SpriteFlag.Ghost, true)
+    otherSprite.setImage(img`
+        . b b b b b b b b b b b b b b . 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 4 b 
         b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
         b e e 4 4 4 4 4 4 4 4 4 4 e e b 
-        b e e e e e e e e e e e e e e b 
-        b e e e e e e e e e e e e e e b 
         b b b b b b b d d b b b b b b b 
-        c b b b b b b c c b b b b b b c 
-        c c c c c c b c c b c c c c c c 
-        b e e e e e c b b c e e e e e b 
+        . b b b b b b c c b b b b b b . 
+        b c c c c c b c c b c c c c c b 
+        b c c c c c c b b c c c c c c b 
+        b c c c c c c c c c c c c c c b 
+        b c c c c c c c c c c c c c c b 
+        b b b b b b b b b b b b b b b b 
+        b e e e e e e e e e e e e e e b 
         b e e e e e e e e e e e e e e b 
         b c e e e e e e e e e e e e c b 
         b b b b b b b b b b b b b b b b 
         . b b . . . . . . . . . . b b . 
-        `, SpriteKind.ChestKind)
-    if (hero.x < scene.screenWidth() * 0.5) {
-        chest.x = hero.x + 64
-    } else {
-        chest.x = hero.x - 64
-    }
-    chest.y = Math.constrain(hero.y - 80, chest.height, scene.screenHeight())
-    chest.z = -1
-    chest.ay = gravity
-    chest.setBounceOnWall(false)
+        `)
+    music.play(music.melodyPlayable(music.powerUp), music.PlaybackMode.InBackground)
+    scroll = sprites.create(assets.image`myImage4`, SpriteKind.ScrollKind)
+    scroll.z = -1
+    scroll.setPosition(otherSprite.x, otherSprite.top - 18)
+    animation.runMovementAnimation(
+    scroll,
+    animation.animationPresets(animation.shake),
+    2000,
+    false
+    )
+    otherSprite.startEffect(effects.rings)
+    timer.after(2500, function () {
+        sprite.sayText("Yay!", 1000, true)
+    })
+    timer.after(5000, function () {
+        game.splash("Super!", "Hinweis gefunden!")
+        effects.clearParticles(otherSprite)
+        showClue()
+    })
 })
-scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile2`, function (sprite, location) {
     doHitBadTile(sprite)
 })
 function showClue () {
@@ -382,11 +367,6 @@ function createLevelMenu () {
         game.reset()
     }
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.CoinKind, function (sprite, otherSprite) {
-    info.changeScoreBy(1)
-    sprites.destroy(otherSprite)
-    music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.InBackground)
-})
 function introCutscene2 () {
     story.startCutscene(function () {
         story.setPagePauseLength(1000, 1000)
@@ -1557,13 +1537,38 @@ function createAnimations () {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft, Predicate.HittingWallDown)
     )
 }
-statusbars.onStatusReached(StatusBarKind.BossHealth, statusbars.StatusComparison.LTE, statusbars.ComparisonType.Percentage, 35, function (status) {
-    bossAcceleration = bossVelocity * 1.65
-    bossVelocity = bossAcceleration * 1.65
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    story.clearAllText()
 })
 function setJumpVy (sprite: Sprite, height: number, gravity: number) {
     sprite.vy = 0 - Math.sqrt(height * (2 * gravity))
 }
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (levelStarted) {
+        doJump()
+    }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.LifeKind, function (sprite, otherSprite) {
+    if (info.life() < maxLife) {
+        info.changeLifeBy(1)
+        sprites.destroy(otherSprite)
+        music.play(music.melodyPlayable(music.magicWand), music.PlaybackMode.InBackground)
+    }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
+    sprites.destroy(otherSprite, effects.disintegrate, 50)
+    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
+        info.changeScoreBy(3)
+    } else if (!(isLevelFinished)) {
+        info.changeLifeBy(-1)
+        isPlayerHit = true
+        timer.after(200, function () {
+            isPlayerHit = false
+            hero.setFlag(SpriteFlag.Invisible, false)
+        })
+        music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
+    }
+})
 function outroCutscene () {
     story.startCutscene(function () {
         story.setPagePauseLength(1000, 1000)
@@ -1657,6 +1662,42 @@ function createEndScreen () {
     effects.confetti.endScreenEffect()
     game.gameOver(true)
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.CoinKind, function (sprite, otherSprite) {
+    info.changeScoreBy(1)
+    sprites.destroy(otherSprite)
+    music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.InBackground)
+})
+statusbars.onZero(StatusBarKind.BossHealth, function (status) {
+    sprites.destroy(boss, effects.disintegrate, 50)
+    sprites.destroy(bossStatusBar)
+    chest = sprites.create(img`
+        . . b b b b b b b b b b b b . . 
+        . b e 4 4 4 4 4 4 4 4 4 4 e b . 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
+        b e e 4 4 4 4 4 4 4 4 4 4 e e b 
+        b e e e e e e e e e e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b b b b b b b d d b b b b b b b 
+        c b b b b b b c c b b b b b b c 
+        c c c c c c b c c b c c c c c c 
+        b e e e e e c b b c e e e e e b 
+        b e e e e e e e e e e e e e e b 
+        b c e e e e e e e e e e e e c b 
+        b b b b b b b b b b b b b b b b 
+        . b b . . . . . . . . . . b b . 
+        `, SpriteKind.ChestKind)
+    if (hero.x < scene.screenWidth() * 0.5) {
+        chest.x = hero.x + 64
+    } else {
+        chest.x = hero.x - 64
+    }
+    chest.y = Math.constrain(hero.y - 80, chest.height, scene.screenHeight())
+    chest.z = -1
+    chest.ay = gravity
+    chest.setBounceOnWall(false)
+})
 function createSnakeAnimation (sprite: Sprite) {
     characterAnimations.loopFrames(
     sprite,
@@ -1955,28 +1996,16 @@ function createSnakeAnimation (sprite: Sprite) {
     characterAnimations.rule(Predicate.NotMoving, Predicate.FacingRight)
     )
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, otherSprite) {
-    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
-        if (!(isBossHit)) {
-            info.changeScoreBy(3)
-            isBossHit = true
-            bossStatusBar.value += 0 - bossLife / bossMaxLifes
-            spawnBee()
-            timer.after(500, function () {
-                isBossHit = false
-                boss.setFlag(SpriteFlag.Invisible, false)
-            })
-            music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
-        }
-    } else if (!(isPlayerHit) && !(isBossHit)) {
-        info.changeLifeBy(-1)
-        isPlayerHit = true
-        timer.after(200, function () {
-            isPlayerHit = false
-            hero.setFlag(SpriteFlag.Invisible, false)
-        })
-        music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
+sprites.onOverlap(SpriteKind.SnakeKind, SpriteKind.SnakeBumperKind, function (sprite, otherSprite) {
+    if (sprite.vx <= 0 && sprite.left <= otherSprite.right) {
+        sprite.vx = snakeSpeed
+    } else if (sprite.vx > 0 && sprite.right >= otherSprite.left) {
+        sprite.vx = 0 - snakeSpeed
     }
+})
+statusbars.onStatusReached(StatusBarKind.BossHealth, statusbars.StatusComparison.LTE, statusbars.ComparisonType.Percentage, 35, function (status) {
+    bossAcceleration = bossVelocity * 1.65
+    bossVelocity = bossAcceleration * 1.65
 })
 function init () {
     hero = sprites.create(assets.image`monkey`, SpriteKind.Player)
@@ -2020,6 +2049,42 @@ function init () {
     game.setGameOverPlayable(false, music.melodyPlayable(music.powerDown), false)
     createAnimations()
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.StepKind, function (sprite, otherSprite) {
+    sprites.destroyAllSpritesOfKind(SpriteKind.StepKind)
+    story.startCutscene(function () {
+        story.setPagePauseLength(1000, 1000)
+        story.setSoundEnabled(true)
+        story.spriteSayText(hero, "Ufff! So viele Stufen....")
+        story.spriteSayText(hero, "...ich muss noch höher!")
+    })
+})
+function doBossFight () {
+    if (hero.x < boss.x) {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage12`)
+        } else {
+            boss.setImage(assets.image`myImage11`)
+        }
+    } else {
+        if (isBossHit) {
+            boss.setImage(assets.image`myImage13`)
+        } else {
+            boss.setImage(assets.image`myImage8`)
+        }
+    }
+    if (boss.x < boss.width * 0.55) {
+        boss.ax = bossAcceleration
+        boss.vx = bossVelocity
+    } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
+        boss.ax = 0 - bossAcceleration
+        boss.vx = 0 - bossVelocity
+    }
+}
+scene.onHitWall(SpriteKind.Player, function (sprite, location) {
+    if (sprite.isHittingTile(CollisionDirection.Bottom)) {
+        numberOfJumpRemaining = numberOfJumps
+    }
+})
 sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, otherSprite) {
     if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.bottom < otherSprite.bottom + 0) {
         sprites.changeDataNumberBy(otherSprite, "life", -1)
@@ -2056,87 +2121,10 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.SnakeKind, function (sprite, oth
         })
     }
 })
-sprites.onOverlap(SpriteKind.Player, SpriteKind.ChestKind, function (sprite, otherSprite) {
-    isLevelFinished = true
-    otherSprite.ay = 0
-    controller.moveSprite(hero, 0, 0)
-    otherSprite.setFlag(SpriteFlag.Ghost, true)
-    otherSprite.setImage(img`
-        . b b b b b b b b b b b b b b . 
-        b e 4 4 4 4 4 4 4 4 4 4 4 4 4 b 
-        b e 4 4 4 4 4 4 4 4 4 4 4 4 e b 
-        b e e 4 4 4 4 4 4 4 4 4 4 e e b 
-        b b b b b b b d d b b b b b b b 
-        . b b b b b b c c b b b b b b . 
-        b c c c c c b c c b c c c c c b 
-        b c c c c c c b b c c c c c c b 
-        b c c c c c c c c c c c c c c b 
-        b c c c c c c c c c c c c c c b 
-        b b b b b b b b b b b b b b b b 
-        b e e e e e e e e e e e e e e b 
-        b e e e e e e e e e e e e e e b 
-        b c e e e e e e e e e e e e c b 
-        b b b b b b b b b b b b b b b b 
-        . b b . . . . . . . . . . b b . 
-        `)
-    music.play(music.melodyPlayable(music.powerUp), music.PlaybackMode.InBackground)
-    scroll = sprites.create(assets.image`myImage4`, SpriteKind.ScrollKind)
-    scroll.z = -1
-    scroll.setPosition(otherSprite.x, otherSprite.top - 18)
-    animation.runMovementAnimation(
-    scroll,
-    animation.animationPresets(animation.shake),
-    2000,
-    false
-    )
-    otherSprite.startEffect(effects.rings)
-    timer.after(2500, function () {
-        sprite.sayText("Yay!", 1000, true)
-    })
-    timer.after(5000, function () {
-        game.splash("Super!", "Hinweis gefunden!")
-        effects.clearParticles(otherSprite)
-        showClue()
-    })
-})
-scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile2`, function (sprite, location) {
-    doHitBadTile(sprite)
-})
-sprites.onOverlap(SpriteKind.SnakeKind, SpriteKind.SnakeBumperKind, function (sprite, otherSprite) {
-    if (sprite.vx <= 0 && sprite.left <= otherSprite.right) {
-        sprite.vx = snakeSpeed
-    } else if (sprite.vx > 0 && sprite.right >= otherSprite.left) {
-        sprite.vx = 0 - snakeSpeed
-    }
-})
-function doBossFight () {
-    if (hero.x < boss.x) {
-        if (isBossHit) {
-            boss.setImage(assets.image`myImage12`)
-        } else {
-            boss.setImage(assets.image`myImage11`)
-        }
-    } else {
-        if (isBossHit) {
-            boss.setImage(assets.image`myImage13`)
-        } else {
-            boss.setImage(assets.image`myImage8`)
-        }
-    }
-    if (boss.x < boss.width * 0.55) {
-        boss.ax = bossAcceleration
-        boss.vx = bossVelocity
-    } else if (boss.x > scene.screenWidth() - boss.width * 0.55) {
-        boss.ax = 0 - bossAcceleration
-        boss.vx = 0 - bossVelocity
-    }
-}
-sprites.onOverlap(SpriteKind.Player, SpriteKind.LifeKind, function (sprite, otherSprite) {
-    if (info.life() < maxLife) {
-        info.changeLifeBy(1)
-        sprites.destroy(otherSprite)
-        music.play(music.melodyPlayable(music.magicWand), music.PlaybackMode.InBackground)
-    }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.FlowerKind, function (sprite, otherSprite) {
+    music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
+    sprites.destroy(otherSprite, effects.disintegrate, 50)
+    spawnBee()
 })
 function createMenu () {
     mainMenu = miniMenu.createMenu(
@@ -2229,11 +2217,6 @@ function createMenu () {
         }
     })
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.FlowerKind, function (sprite, otherSprite) {
-    music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
-    sprites.destroy(otherSprite, effects.disintegrate, 50)
-    spawnBee()
-})
 function doJump () {
     if (numberOfJumpRemaining > 0) {
         if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft))) {
@@ -2283,6 +2266,17 @@ function startBossFight () {
         }
     })
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.GoalKind, function (sprite, otherSprite) {
+    story.startCutscene(function () {
+        story.setPagePauseLength(1000, 1000)
+        story.setSoundEnabled(true)
+        controller.moveSprite(hero, 0, 0)
+        story.spriteSayText(hero, "JUHUUUU!!!")
+        pause(1000)
+        effects.clearParticles(goal)
+        createEndScreen()
+    })
+})
 function startLevel () {
     sprites.destroyAllSpritesOfKind(SpriteKind.Enemy)
     sprites.destroyAllSpritesOfKind(SpriteKind.CoinKind)
@@ -2734,6 +2728,29 @@ function startLevel () {
         }
     })
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.BossKind, function (sprite, otherSprite) {
+    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
+        if (!(isBossHit)) {
+            info.changeScoreBy(3)
+            isBossHit = true
+            bossStatusBar.value += 0 - bossLife / bossMaxLifes
+            spawnBee()
+            timer.after(500, function () {
+                isBossHit = false
+                boss.setFlag(SpriteFlag.Invisible, false)
+            })
+            music.play(music.melodyPlayable(music.thump), music.PlaybackMode.UntilDone)
+        }
+    } else if (!(isPlayerHit) && !(isBossHit)) {
+        info.changeLifeBy(-1)
+        isPlayerHit = true
+        timer.after(200, function () {
+            isPlayerHit = false
+            hero.setFlag(SpriteFlag.Invisible, false)
+        })
+        music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
+    }
+})
 function spawnBee () {
     bee = sprites.create(img`
         . . . . . . . . . . . . . . . . 
@@ -2766,29 +2783,12 @@ function spawnBee () {
     bee.setPosition(Math.constrain(hero.x + beeOffset, 0, scene.screenWidth()), Math.constrain(hero.y - 80, bee.height, scene.screenHeight()))
     bee.follow(hero, enemySpeed)
 }
-controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    story.clearAllText()
-})
 function fadeToWhite () {
     color.startFade(color.originalPalette, color.White, 500)
     color.pauseUntilFadeDone()
     pause(500)
     color.startFade(color.White, color.originalPalette, 500)
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    sprites.destroy(otherSprite, effects.disintegrate, 50)
-    if (characterAnimations.matchesRule(sprite, characterAnimations.rule(Predicate.MovingDown)) && sprite.y < otherSprite.top + 2) {
-        info.changeScoreBy(3)
-    } else if (!(isLevelFinished)) {
-        info.changeLifeBy(-1)
-        isPlayerHit = true
-        timer.after(200, function () {
-            isPlayerHit = false
-            hero.setFlag(SpriteFlag.Invisible, false)
-        })
-        music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
-    }
-})
 function fadeToBlack () {
     color.startFade(color.originalPalette, color.Black, 500)
     color.pauseUntilFadeDone()
@@ -2803,14 +2803,14 @@ let snake: Sprite = null
 let flower: Sprite = null
 let life: Sprite = null
 let coin: Sprite = null
+let goal: Sprite = null
 let mainMenu: miniMenu.MenuSprite = null
-let scroll: Sprite = null
-let isLevelFinished = false
+let bossMaxLifes = 0
 let bossSpawnBeeTime = 0
-let snakeSpeed = 0
 let isBossHitInvisible = false
+let isBossHit = false
+let bossLife = 0
 let isBossFightStarted = false
-let maxLife = 0
 let isPlayerHitInvisible = false
 let enemySpeed = 0
 let isIdleAnimation = false
@@ -2821,13 +2821,19 @@ let isWalking = false
 let isFacingLeft = false
 let wallJumpHeight = 0
 let jumpHeight = 0
-let bossMaxLifes = 0
-let bossLife = 0
-let isBossHit = false
-let isPlayerHit = false
-let endScreenSprite: Sprite = null
+let numberOfJumpRemaining = 0
+let numberOfJumps = 0
 let bossVelocity = 0
 let bossAcceleration = 0
+let snakeSpeed = 0
+let gravity = 0
+let chest: Sprite = null
+let bossStatusBar: StatusBarSprite = null
+let boss: Sprite = null
+let endScreenSprite: Sprite = null
+let isPlayerHit = false
+let maxLife = 0
+let levelStarted = false
 let walkingSpeed = 0
 let levelCodeEnd = ""
 let levelCodeBoss = ""
@@ -2835,19 +2841,25 @@ let levelCode1 = ""
 let levelCode0 = ""
 let currentLevelCode = ""
 let clueScreen: Sprite = null
-let gravity = 0
-let chest: Sprite = null
-let bossStatusBar: StatusBarSprite = null
-let boss: Sprite = null
-let levelStarted = false
-let goal: Sprite = null
-let numberOfJumps = 0
-let numberOfJumpRemaining = 0
+let scroll: Sprite = null
 let hero: Sprite = null
+let isLevelFinished = false
 let mainMenuButtonASprite: Sprite = null
 let titleScreenSprite: Sprite = null
 init()
 createTitleScreen()
+game.onUpdateInterval(50, function () {
+    if (levelStarted) {
+        if (isPlayerHit) {
+            hero.setFlag(SpriteFlag.Invisible, isPlayerHitInvisible)
+            isPlayerHitInvisible = !(isPlayerHitInvisible)
+        }
+        if (isBossHit) {
+            boss.setFlag(SpriteFlag.Invisible, isBossHitInvisible)
+            isBossHitInvisible = !(isBossHitInvisible)
+        }
+    }
+})
 game.onUpdate(function () {
     if (levelStarted) {
         if (characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallLeft)) && controller.left.isPressed() && !(hero.left <= 0) || characterAnimations.matchesRule(hero, characterAnimations.rule(Predicate.HittingWallRight)) && controller.right.isPressed() && !(hero.right >= tiles.tilemapColumns() * tiles.tileWidth())) {
@@ -2865,18 +2877,6 @@ game.onUpdate(function () {
                     spawnBee()
                 }
             }
-        }
-    }
-})
-game.onUpdateInterval(50, function () {
-    if (levelStarted) {
-        if (isPlayerHit) {
-            hero.setFlag(SpriteFlag.Invisible, isPlayerHitInvisible)
-            isPlayerHitInvisible = !(isPlayerHitInvisible)
-        }
-        if (isBossHit) {
-            boss.setFlag(SpriteFlag.Invisible, isBossHitInvisible)
-            isBossHitInvisible = !(isBossHitInvisible)
         }
     }
 })
